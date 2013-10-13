@@ -28,6 +28,14 @@ def posterior_info(sample_mean, prior_stdev, sample_size, population_stdev):
 
 	return posterior_stats
 
+def setup(population_mean, population_stdev, sample_size, prior_stdev, width):
+	data = simulate_experiment(population_mean, population_stdev, sample_size)
+	sample_mean = numpy.mean(data)
+	posterior_stats = posterior_info(sample_mean, prior_stdev, sample_size, population_stdev)
+	theta_range = sigma_range(posterior_stats['mean'], posterior_stats['stdev'], width)
+
+	return posterior_stats, theta_range
+
 def analytical(posterior_stats, theta_range, data_points):
 	""" Generate theta values within desired range and calculate corresponding posteriors """
 	thetas = numpy.linspace(theta_range['min'], theta_range['max'], data_points)
@@ -88,22 +96,17 @@ def metropolis_hastings(posterior_stats, theta_initial, proposal_stdev, posterio
 	iterations = int(numpy.floor(posterior_evaluations / 2))
 	for i in range(iterations):
 		theta_proposed = generate_candidate(theta_current, proposal_stdev)
+		# XXX: Store previous
 		posterior_current = calculate_posterior(theta_current, posterior_stats)
 		posterior_proposed = calculate_posterior(theta_proposed, posterior_stats)
 		acceptance_probability = calculate_acceptance_probability(posterior_current, posterior_proposed)
 
 		# Always accept proposed value if it is more likely than current value
-		if acceptance_probability >= 1:
+		# If proposed value less likely than current value, accept with probability 'acceptance_proability'
+		if acceptance_probability >= 1 or random.uniform(0,1) <= acceptance_probability:
 			theta_current = theta_proposed
 			posterior_current = posterior_proposed
 			accepts += 1
-		# If proposed value less likely than current value, accept with probability 'acceptance_ratio'
-		else:
-			random_number = random.uniform(0,1)
-			if random_number <= acceptance_probability:
-				theta_current = theta_proposed
-				posterior_current = posterior_proposed
-				accepts += 1
 		
 		thetas_mh.append(theta_current)
 		posteriors_mh.append(posterior_current)
@@ -209,10 +212,7 @@ def main():
 	# Number of stdevs from the mean over which analytical and rejection sampling results will be found
 	width = 6
 
-	data = simulate_experiment(population_mean, population_stdev, sample_size)
-	sample_mean = numpy.mean(data)
-	posterior_stats = posterior_info(sample_mean, prior_stdev, sample_size, population_stdev)
-	theta_range = sigma_range(posterior_stats['mean'], posterior_stats['stdev'], width)
+	posterior_stats, theta_range = setup(population_mean, population_stdev, sample_size, prior_stdev, width)
 
 	# Analytical
 	data_points = 100
