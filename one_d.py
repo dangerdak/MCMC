@@ -232,6 +232,7 @@ def main():
 
 	plot_burn_in(thetas_mh, posteriors_mh)
 
+	# Effects of changing the proposal distributions standard deviation
 	proposal_stdevs, acceptance_ratios, mh_stdevs = proposal_stdev_effects(posterior_stats, theta_initial, posterior_evaluations)
 	plot_acceptance_ratios(proposal_stdevs, acceptance_ratios)
 	plot_mh_stdevs(proposal_stdevs, mh_stdevs)
