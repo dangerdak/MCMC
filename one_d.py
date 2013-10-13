@@ -1,5 +1,6 @@
 import math
 import random
+from argparse import ArgumentParser
 
 import numpy
 import matplotlib.pyplot as plt
@@ -202,7 +203,17 @@ def plot_mh_stdevs(proposal_stdevs, mh_stdevs):
 	plt.show()
 
 def main():
-	population_mean = 0.5
+
+	modes = ('analytical', 'rejection', 'metropolis', 'proposal')
+	print(modes)
+	parser = ArgumentParser(description='One dimensional MCMC')
+	parser.add_argument('--population_mean', type=float, default=0.5, help='The mean of the population.')
+	#parser. choices modes --mode type string?
+
+	args = parser.parse_args()
+
+	population_mean = args.population_mean
+	print(population_mean)
 	population_stdev = 0.1
 	sample_size = 10
 	prior_stdev = 1
