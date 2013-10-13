@@ -57,7 +57,7 @@ def rejection_sampling(posterior_stats, theta_range):
 	y = [random.uniform(posterior_min, posterior_max) for _ in range(n_samples)]
 
 	# Calculate posterior at each x value
-	comparison_posterior = [math.exp(-0.5 * ((i - posterior_stats['mean'])/posterior_stats['stdev'])**2) for i in x]
+	comparison_posterior = [calculate_posterior(i, posterior_stats) for i in x]
 	x_accepts = []
 	for i,j,k in zip(x,y,comparison_posterior):
 		if j <= k:
@@ -90,14 +90,13 @@ def metropolis_hastings(posterior_stats, theta_initial, proposal_stdev, posterio
 	# For burn-in plot
 	posteriors_mh = []
 	theta_current = theta_initial
+	posterior_current = calculate_posterior(theta_current, posterior_stats)
 	# For acceptance-ratio plot
 	accepts = 0
 	# Find number of iterations to complete, based on maximum number of posterior evaluations allowed
 	iterations = int(numpy.floor(posterior_evaluations / 2))
 	for i in range(iterations):
 		theta_proposed = generate_candidate(theta_current, proposal_stdev)
-		# XXX: Store previous
-		posterior_current = calculate_posterior(theta_current, posterior_stats)
 		posterior_proposed = calculate_posterior(theta_proposed, posterior_stats)
 		acceptance_probability = calculate_acceptance_probability(posterior_current, posterior_proposed)
 
