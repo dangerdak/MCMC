@@ -103,7 +103,7 @@ def metropolis_hastings(posterior_stats, theta_initial, proposal_stdev, posterio
 
 		# Always accept proposed value if it is more likely than current value
 		# If proposed value less likely than current value, accept with probability 'acceptance_proability'
-		if acceptance_probability >= 1 or random.uniform(0,1) <= acceptance_probability:
+		if (acceptance_probability >= 1) or (random.uniform(0,1) <= acceptance_probability):
 			theta_current = theta_proposed
 			posterior_current = posterior_proposed
 			accepts += 1
@@ -204,12 +204,11 @@ def plot_mh_stdevs(proposal_stdevs, mh_stdevs):
 
 def main():
 
-	modes = ('analytical', 'rejection', 'metropolis', 'proposal')
-	print(modes)
+	# Use command line arguments to determine which parts of code to run
+	modes = ['rejection', 'metropolis', 'proposal', 'all']
 	parser = ArgumentParser(description='One dimensional MCMC')
 	parser.add_argument('--population_mean', type=float, default=0.5, help='The mean of the population.')
-	#parser. choices modes --mode type string?
-
+	parser.add_argument('--mode', type=str, default='all', choices=modes, help='Which sections of program to run.')
 	args = parser.parse_args()
 
 	population_mean = args.population_mean
@@ -228,25 +227,30 @@ def main():
 	data_points = 100
 	thetas, posteriors = analytical(posterior_stats, theta_range, data_points)
 
-	# Rejection sampling
-	x_accepts = rejection_sampling(posterior_stats, theta_range)
-	plot_rejection_sampling(thetas, posteriors, x_accepts, bins)
-	plot_log(thetas, posteriors, x_accepts, bins)
+	if (args.mode == 'rejection') or (args.mode == 'all'):
+		# Rejection sampling
+		x_accepts = rejection_sampling(posterior_stats, theta_range)
+		plot_rejection_sampling(thetas, posteriors, x_accepts, bins)
+		plot_log(thetas, posteriors, x_accepts, bins)
 
-	# Metropolis-Hastings
-	theta_initial = 0.45
-	posterior_evaluations = 80000
-	proposal_stdev = 0.3
-	thetas_mh, posteriors_mh, accepts = metropolis_hastings(posterior_stats, theta_initial, proposal_stdev, posterior_evaluations)
-	plot_metropolis_hastings(thetas, posteriors, thetas_mh, bins)
-	plot_log(thetas, posteriors, thetas_mh, bins)
+	if (args.mode == 'metropolis') or (args.mode == 'proposal') or (args.mode == 'all'):
+		theta_initial = 0.45
+		posterior_evaluations = 80000
+		
+	if (args.mode == 'metropolis') or (args.mode == 'all'):
+		# Metropolis-Hastings
+		proposal_stdev = 0.3
+		thetas_mh, posteriors_mh, accepts = metropolis_hastings(posterior_stats, theta_initial, proposal_stdev, posterior_evaluations)
+		plot_metropolis_hastings(thetas, posteriors, thetas_mh, bins)
+		plot_log(thetas, posteriors, thetas_mh, bins)
 
-	plot_burn_in(thetas_mh, posteriors_mh)
+		plot_burn_in(thetas_mh, posteriors_mh)
 
-	# Effects of changing the proposal distributions standard deviation
-	proposal_stdevs, acceptance_ratios, mh_stdevs = proposal_stdev_effects(posterior_stats, theta_initial, posterior_evaluations)
-	plot_acceptance_ratios(proposal_stdevs, acceptance_ratios)
-	plot_mh_stdevs(proposal_stdevs, mh_stdevs)
+	if (args.mode == 'proposal') or (args.mode == 'all'):
+		# Effects of changing the proposal distributions standard deviation
+		proposal_stdevs, acceptance_ratios, mh_stdevs = proposal_stdev_effects(posterior_stats, theta_initial, posterior_evaluations)
+		plot_acceptance_ratios(proposal_stdevs, acceptance_ratios)
+		plot_mh_stdevs(proposal_stdevs, mh_stdevs)
 
 if __name__ == '__main__':
 	main()
