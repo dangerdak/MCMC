@@ -186,21 +186,21 @@ def proposal_stdev_effects(posterior_stats, theta_initial, posterior_evaluations
 
 	return(proposal_stdevs, acceptance_ratios, mh_stdevs)
 	
-def plot_acceptance_ratios(proposal_stdevs, acceptance_ratios):
-	""" Plot acceptance ratio for different standard deviations of the proposal distribution """
+def plot_proposal(proposal_stdevs, acceptance_ratios, mh_stdevs):
+	plt.figure(1)
+	plt.subplot(1, 2, 1)
+	# Plot acceptance ratio for different standard deviations of the proposal distribution 
 	plt.plot(proposal_stdevs, acceptance_ratios, marker='x', linestyle='none')
-
 	plt.xlabel('Proposal Standard Deviation')
 	plt.ylabel('Acceptance Ratio')
-	plt.show()
 
-def plot_mh_stdevs(proposal_stdevs, mh_stdevs):
-	""" Plot standard devation of posterior from MH method against that of proposal distribution """
+	plt.subplot(1, 2, 2)
+	# Plot standard devation of posterior from MH method against that of proposal distribution 
 	plt.plot(proposal_stdevs, mh_stdevs, marker='x', linestyle='none')
-
 	plt.xlabel('Proposal Standard Deviation')
 	plt.ylabel('Posterior Standard Deviation')
 	plt.show()
+	
 
 def main():
 
@@ -249,8 +249,7 @@ def main():
 	if (args.mode == 'proposal') or (args.mode == 'all'):
 		# Effects of changing the proposal distributions standard deviation
 		proposal_stdevs, acceptance_ratios, mh_stdevs = proposal_stdev_effects(posterior_stats, theta_initial, posterior_evaluations)
-		plot_acceptance_ratios(proposal_stdevs, acceptance_ratios)
-		plot_mh_stdevs(proposal_stdevs, mh_stdevs)
+		plot_proposal(proposal_stdevs, acceptance_ratios, mh_stdevs)
 
 if __name__ == '__main__':
 	main()
