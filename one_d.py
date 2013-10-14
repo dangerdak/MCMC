@@ -84,7 +84,7 @@ def calculate_acceptance_probability(posterior_current, posterior_proposed):
 
 	return acceptance_probability
 
-def metropolis_hastings(posterior_stats, theta_initial, proposal_stdev, posterior_evaluations):
+def metropolis_hastings(posterior_stats, theta_initial, proposal_stdev, iterations):
 	""" Numerical solution (Metropolis-Hastings algorithm) """	
 	
 	thetas_mh = []
@@ -94,8 +94,6 @@ def metropolis_hastings(posterior_stats, theta_initial, proposal_stdev, posterio
 	posterior_current = calculate_posterior(theta_current, posterior_stats)
 	# For acceptance-ratio plot
 	accepts = 0
-	# Find number of iterations to complete, based on maximum number of posterior evaluations allowed
-	iterations = int(numpy.floor(posterior_evaluations / 2))
 	for i in range(iterations):
 		theta_proposed = generate_candidate(theta_current, proposal_stdev)
 		posterior_proposed = calculate_posterior(theta_proposed, posterior_stats)
@@ -165,18 +163,15 @@ def plot_burn_in(thetas_mh, posteriors_mh):
 	plt.ylabel(r'$\propto log(P(\theta|x))$', fontsize=15)
 	plt.show()
 
-def proposal_stdev_effects(posterior_stats, theta_initial, posterior_evaluations, proposal_stdev_min = 0.06, proposal_stdev_max = 0.26, data_points = 20):
+def proposal_stdev_effects(posterior_stats, theta_initial, iterations, proposal_stdev_min = 0.06, proposal_stdev_max = 0.26, data_points = 20):
 
-	# Find number of iterations completed in MH
-	iterations = int(numpy.floor(posterior_evaluations / 2))
-	
 	mh_stdevs = []
 	acceptance_ratios = []
 	proposal_stdevs = []
 	proposal_stdev_interval = (proposal_stdev_max - proposal_stdev_min) / data_points
 	proposal_stdev = proposal_stdev_min
 	for i in range(data_points):
-		thetas_mh, posteriors_mh, accepts = metropolis_hastings(posterior_stats, theta_initial, proposal_stdev, posterior_evaluations)
+		thetas_mh, posteriors_mh, accepts = metropolis_hastings(posterior_stats, theta_initial, proposal_stdev, iterations)
 
 		acceptance_ratios.append(accepts / iterations)
 		proposal_stdevs.append(proposal_stdev)
@@ -234,13 +229,13 @@ def main():
 		plot_log(thetas, posteriors, x_accepts, bins)
 
 	if (args.mode == 'metropolis') or (args.mode == 'proposal') or (args.mode == 'all'):
-		theta_initial = 0.45
-		posterior_evaluations = 80000
+		theta_initial = 0.3
+		iterations = 100000
 		
 	if (args.mode == 'metropolis') or (args.mode == 'all'):
 		# Metropolis-Hastings
-		proposal_stdev = 0.3
-		thetas_mh, posteriors_mh, accepts = metropolis_hastings(posterior_stats, theta_initial, proposal_stdev, posterior_evaluations)
+		proposal_stdev = 0.16
+		thetas_mh, posteriors_mh, accepts = metropolis_hastings(posterior_stats, theta_initial, proposal_stdev, iterations)
 		plot_metropolis_hastings(thetas, posteriors, thetas_mh, bins)
 		plot_log(thetas, posteriors, thetas_mh, bins)
 
@@ -248,7 +243,7 @@ def main():
 
 	if (args.mode == 'proposal') or (args.mode == 'all'):
 		# Effects of changing the proposal distributions standard deviation
-		proposal_stdevs, acceptance_ratios, mh_stdevs = proposal_stdev_effects(posterior_stats, theta_initial, posterior_evaluations)
+		proposal_stdevs, acceptance_ratios, mh_stdevs = proposal_stdev_effects(posterior_stats, theta_initial, iterations)
 		plot_proposal(proposal_stdevs, acceptance_ratios, mh_stdevs)
 
 if __name__ == '__main__':
