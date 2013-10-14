@@ -164,7 +164,7 @@ def plot_burn_in(thetas_mh, posteriors_mh):
 	plt.show()
 
 def proposal_stdev_effects(posterior_stats, theta_initial, iterations, proposal_stdev_min = 0.06, proposal_stdev_max = 0.26, data_points = 20):
-
+	""" Returns data showing effects of changing the standard deviation of the proposal distribution """
 	mh_stdevs = []
 	acceptance_ratios = []
 	proposal_stdevs = []
@@ -182,6 +182,7 @@ def proposal_stdev_effects(posterior_stats, theta_initial, iterations, proposal_
 	return(proposal_stdevs, acceptance_ratios, mh_stdevs)
 	
 def plot_proposal(proposal_stdevs, acceptance_ratios, mh_stdevs):
+	""" Plots showing effect of changing te standard deviation of the proposal distribution """
 	plt.figure(1)
 	plt.subplot(1, 2, 1)
 	# Plot acceptance ratio for different standard deviations of the proposal distribution 
@@ -229,6 +230,7 @@ def main():
 		plot_log(thetas, posteriors, x_accepts, bins)
 
 	if (args.mode == 'metropolis') or (args.mode == 'proposal') or (args.mode == 'all'):
+		# Variables required by metropolis and proposal
 		theta_initial = 0.3
 		iterations = 100000
 		
