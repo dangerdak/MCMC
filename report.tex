@@ -8,7 +8,7 @@
 \usepackage[parfill]{parskip}
 
 % Images
-\usepackage{graphicx}
+\usepackage{graphicx} 
 \usepackage{caption}
 
 % URLs
@@ -16,53 +16,101 @@
 
 % Maths
 \usepackage{amsmath}
+\usepackage{xfrac}
+
+% Clever referencing
+\usepackage{cleveref}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{document}
-\title{MCMC in Action: Applying the Metropolis-Hastings Algorithm to 
-a Two Dimensional Gaussian}
-\date{\today}
-\author{Dakshina Scott}
+\begin{document} 
+\title{MCMC in Action: Applying the Metropolis-Hastings Algorithm to a Two
+Dimensional Gaussian}
+
+\date{\today} 
+\author{Dakshina Scott} 
 \maketitle
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{abstract}
+\begin{abstract} 
 \end{abstract}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \tableofcontents
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Introduction: What is MCMC?}
+\section{Introduction: What is MCMC?} 
 \subsection{Monte Carlo Methods, inc Rejection Sampling}
-\subsection{Markov Chains}
+
+\subsection{Markov Chains} 
 \subsection{Metropolis-Hastings Algorithm}
 \subsection{Examples of Applications}
 
-\section{One-Dimensional Posterior}
+\section{One-Dimensional Posterior} 
+The aim of the first part of this project was to find the posterior
+distribution for a quantity theta, for the case of a Gaussian prior and a
+Gaussian likelihood. Measurements were simulated by generating a set of
+independent, Gaussian distributed variables, $\hat{x} = \{x_1, x_2, ..., x_N\}$, representing measurements of a quantity of interest $\theta$. In this case we used that
+\begin{equation}
+	\label{eq:measurements}
+	p(\theta) \sim \mathcal{N}(0.5, 0.1),
+\end{equation}
+in order to generate our results - i.e. that we have a population mean of 0.5, and a population variance of 0.1. If the data $\hat{x}$ had come from an actual experiment of course we would not know these two values.
+The likelihood function for the data $\hat{x}$ is given by:
+
+\begin{equation}
+	\label{eq:rawlikelihood}
+	\mathcal{L}(\theta) = p(\hat{\mathbf{x}}|\bar{x},\sigma) = \prod_{i=1}^{N} \frac{1}{\sqrt{2\pi}\sigma}\exp\left(-\frac{1}{2}\frac{(\theta - \hat{x}_i)^2}{\sigma^2}\right),
+\end{equation}
+
+from which it can be shown that:
+\begin{equation}
+	\label{eq:likelihood}
+	\mathcal{L}(\theta) = L_0\exp\left(-\frac{1}{2}\frac{(\theta - \bar{x})^2}{\sfrac{\sigma^2}{N}}\right),
+\end{equation}
+where $L_0$ is a constant (see \cref{sec:likelihood}).
+
+Assuming the following prior distribution:
+\begin{equation}
+	\label{eq:prior}
+	p(\theta) =  \frac{1}{\sqrt{2\pi}}\exp\left(-\frac{1}{2}\frac{\theta^2}{\Sigma^2}\right),
+\end{equation}
+with $\Sigma = 1$, Bayes theorem was used to find the posterior distribution.
+
+Bayes theorem says that the posterior distribution can be 
+\begin{equation}
+	\label{eq:bayes}
+	p(\theta|x) = \frac{\p(x|\theta)p(\theta)}{\p(x)}
+\end{equation}
+
 \subsection{Analytical Solution}
-\subsection{Rejection Sampling}
-\subsection{Metropolis-Hastings Algorithm}
+\subsection{Rejection Sampling} 
+\subsection{Metropolis-Hastings Algorithm} 
 \subsection{Analytical vs Rejection vs MH}
 
-\section{Two-Dimensional}
+\section{Two-Dimensional} 
 \subsection{Analytical Solution}
-\subsection{Metropolis-Hastings}
+\subsection{Metropolis-Hastings} 
 \subsection{Analytical vs MH}
 
 \section{Conclusion}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\appendix
-\section{one_d_code}
-\section{two_d_code}
+\appendix 
+\label{appendix}
+
+\section{One-Dimensional Likelihood Function}
+\label{sec:likelihood}
+
+\section{onedcode} 
+\label{sec:onedcode}
+
+\section{twodcode}
+\label{sec:twodcode}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{thebibliography}{10}
 
-	\bibitem{} 
 
-	\bibitem{}
 \end{thebibliography}
 
 \end{document}
