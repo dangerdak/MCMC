@@ -123,9 +123,9 @@ def plot_rejection_sampling(thetas, posteriors, x_accepts, bins):
 	stdev = numpy.std(x_accepts)
 	display_string = ('$\mu =$ {0:.3f} \n$\sigma =$ {1:.3f}').format(mean, stdev)
 
-	plt.xlabel(r'$\theta$', fontsize=14)
-	plt.ylabel(r'$\propto P(\theta|x)$', fontsize=14)
-	plt.text(0.8, 0.8, display_string, transform=ax.transAxes, fontsize=14)
+	plt.xlabel(r'$\theta$', fontsize=13)
+	plt.ylabel(r'$\propto P(\theta|x)$', fontsize=13)
+	plt.text(0.8, 0.8, display_string, transform=ax.transAxes, fontsize=13)
 	plt.savefig('rejection.png', bbox_inches='tight')
 	plt.show()
 	
@@ -146,9 +146,9 @@ def plot_metropolis_hastings(thetas, posteriors, thetas_mh, bins):
 	stdev = numpy.std(thetas_mh)
 	display_string = ('$\mu =$ {0:.3f} \n$\sigma =$ {1:.3f}').format(mean, stdev)
 
-	plt.xlabel(r'$\theta$', fontsize=14)
-	plt.ylabel(r'$\propto P(\theta|x)$', fontsize=14)
-	plt.text(0.8, 0.8, display_string, transform=ax.transAxes, fontsize=14)
+	plt.xlabel(r'$\theta$', fontsize=13)
+	plt.ylabel(r'$\propto P(\theta|x)$', fontsize=13)
+	plt.text(0.8, 0.8, display_string, transform=ax.transAxes, fontsize=13)
 	plt.savefig('metropolishastings.png', bbox_inches='tight')
 	plt.show()
 
@@ -167,9 +167,9 @@ def plot_log(thetas, posteriors, numerical_thetas, bins):
 	stdev = numpy.std(numerical_thetas)
 	display_string = ('$\mu =$ {0:.3f} \n$\sigma =$ {1:.3f}').format(mean, stdev)
 
-	plt.xlabel(r'$\theta$', fontsize=14)
-	plt.ylabel(r'$\propto log(P(\theta|x))$', fontsize=14)
-	plt.text(0.5, 0.5, display_string, transform=ax.transAxes, fontsize=14)
+	plt.xlabel(r'$\theta$', fontsize=13)
+	plt.ylabel(r'$\propto log(P(\theta|x))$', fontsize=13)
+	plt.text(0.5, 0.5, display_string, transform=ax.transAxes, fontsize=13)
 	plt.show()
 
 def plot_log_both(thetas, posteriors, thetas_r, thetas_mh, bins):
@@ -195,10 +195,10 @@ def plot_log_both(thetas, posteriors, thetas_r, thetas_mh, bins):
 	bin_width = bin_edges[1] - bin_edges[0]
 	hist = hist / max(hist)
 	ax1.bar(bin_edges[:-1], -numpy.log(hist), bin_width, color='green')
-	ax1.text(text_x, text_y, display_string_r, transform=ax1.transAxes, fontsize=14)
+	ax1.text(text_x, text_y, display_string_r, transform=ax1.transAxes, fontsize=13)
 
-	ax1.set_xlabel(r'$\theta$', fontsize=14)
-	ax1.set_ylabel(r'$\propto log(P(\theta|x))$', fontsize=14)
+	ax1.set_xlabel(r'$\theta$', fontsize=13)
+	ax1.set_ylabel(r'$\propto log(P(\theta|x))$', fontsize=13)
 
 	# Metropolis-Hastings plot
 	ax2.plot(thetas, -numpy.log(posteriors), linewidth=3)
@@ -207,21 +207,23 @@ def plot_log_both(thetas, posteriors, thetas_r, thetas_mh, bins):
 	bin_width = bin_edges[1] - bin_edges[0]
 	hist = hist / max(hist)
 	ax2.bar(bin_edges[:-1], -numpy.log(hist), bin_width, color='green')
-	ax2.text(text_x, text_y, display_string_mh, transform=ax2.transAxes, fontsize=14)
+	ax2.text(text_x, text_y, display_string_mh, transform=ax2.transAxes, fontsize=13)
 
-	ax2.set_xlabel(r'$\theta$', fontsize=14)
+	ax2.set_xlabel(r'$\theta$', fontsize=13)
 
 	plt.savefig('bothlogs.png')
 	plt.show()
 
-def plot_burn_in(thetas_mh, posteriors_mh):
+def plot_burn_in(iterations, thetas_mh, posteriors_mh):
 	""" Burn-in plot for Metropolis-Hastings method """
 	step = list(range(1, len(thetas_mh)+1))
 	
-	plt.plot(numpy.log(step), -numpy.log(posteriors_mh))
+	plt.plot(range(20000), thetas_mh[1:20001])
+	plt.xlim(-100)
+	plt.ylim(0.05, 0.6)
 
-	plt.xlabel(r'$log(step)$', fontsize=14)
-	plt.ylabel(r'$\propto log(P(\theta|x))$', fontsize=14)
+	plt.xlabel('Iteration', fontsize=13)
+	plt.ylabel(r'$\theta$', fontsize=13)
 	plt.savefig('burnin.png', bbox_inches='tight')
 	plt.show()
 
@@ -293,16 +295,16 @@ def main():
 
 	if (args.mode == 'metropolis_hastings') or (args.mode == 'proposal') or (args.mode == 'all'):
 		# Variables required by metropolis and proposal
-		theta_initial = 0.2
+		theta_initial = 0.1
 		
 	if (args.mode == 'metropolis_hastings') or (args.mode == 'all'):
 		# Metropolis-Hastings
-		proposal_stdev = 0.16
+		proposal_stdev = 0.01
 		thetas_mh, posteriors_mh, accepts = metropolis_hastings(posterior_stats, theta_initial, proposal_stdev, iterations)
 		plot_metropolis_hastings(thetas, posteriors, thetas_mh, bins)
 		plot_log(thetas, posteriors, thetas_mh, bins)
 
-		plot_burn_in(thetas_mh, posteriors_mh)
+		plot_burn_in(iterations, thetas_mh, posteriors_mh)
 	
 	if (args.mode =='all'):
 		plot_log_both(thetas, posteriors, x_accepts, thetas_mh, bins)
