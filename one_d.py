@@ -201,14 +201,12 @@ def plot_proposal(proposal_stdevs, acceptance_ratios, mh_stdevs):
 def main():
 
 	# Use command line arguments to determine which parts of code to run
-	modes = ['rejection', 'metropolis', 'proposal', 'all']
+	modes = ['rejection', 'metropolis_hastings', 'all', 'proposal']
 	parser = ArgumentParser(description='One dimensional MCMC')
-	parser.add_argument('--population_mean', type=float, default=0.5, help='The mean of the population.')
-	parser.add_argument('--mode', type=str, default='all', choices=modes, help='Which sections of program to run.')
+	parser.add_argument('--mode', type=str, default='all', choices=modes, help='Specify which section of the program to run.')
 	args = parser.parse_args()
 
-	population_mean = args.population_mean
-	print(population_mean)
+	population_mean = 0.5
 	population_stdev = 0.1
 	sample_size = 10
 	prior_stdev = 1
@@ -229,12 +227,12 @@ def main():
 		plot_rejection_sampling(thetas, posteriors, x_accepts, bins)
 		plot_log(thetas, posteriors, x_accepts, bins)
 
-	if (args.mode == 'metropolis') or (args.mode == 'proposal') or (args.mode == 'all'):
+	if (args.mode == 'metropolis_hastings') or (args.mode == 'proposal') or (args.mode == 'all'):
 		# Variables required by metropolis and proposal
 		theta_initial = 0.3
 		iterations = 100000
 		
-	if (args.mode == 'metropolis') or (args.mode == 'all'):
+	if (args.mode == 'metropolis_hastings') or (args.mode == 'all'):
 		# Metropolis-Hastings
 		proposal_stdev = 0.16
 		thetas_mh, posteriors_mh, accepts = metropolis_hastings(posterior_stats, theta_initial, proposal_stdev, iterations)
@@ -243,7 +241,7 @@ def main():
 
 		plot_burn_in(thetas_mh, posteriors_mh)
 
-	if (args.mode == 'proposal') or (args.mode == 'all'):
+	if (args.mode == 'proposal'):
 		# Effects of changing the proposal distributions standard deviation
 		proposal_stdevs, acceptance_ratios, mh_stdevs = proposal_stdev_effects(posterior_stats, theta_initial, iterations)
 		plot_proposal(proposal_stdevs, acceptance_ratios, mh_stdevs)
