@@ -44,18 +44,14 @@ def analytical(posterior_stats, theta_range, data_points):
 
 	return thetas, posteriors
 
-def rejection_sampling(posterior_stats, theta_range):
-	""" Numerical solution (Rejection sampling)
-
-	:param width: number of standard deviations from the mean which are included
-	"""
-	n_samples = 10000
+def rejection_sampling(posterior_stats, theta_range, iterations):
+	""" Numerical solution (Rejection sampling) """
 	posterior_min = 0
 	posterior_max = 1
 
 	# Generate random uniformly distributed x and y coordinates in appropriate ranges
-	x = [random.uniform(theta_range['min'], theta_range['max']) for _ in range(n_samples)]
-	y = [random.uniform(posterior_min, posterior_max) for _ in range(n_samples)]
+	x = [random.uniform(theta_range['min'], theta_range['max']) for _ in range(iterations)]
+	y = [random.uniform(posterior_min, posterior_max) for _ in range(iterations)]
 
 	# Calculate posterior at each x value
 	comparison_posterior = [calculate_posterior(i, posterior_stats) for i in x]
@@ -123,6 +119,7 @@ def plot_rejection_sampling(thetas, posteriors, x_accepts, bins):
 	
 	plt.xlabel(r'$\theta$', fontsize=15)
 	plt.ylabel(r'$\propto P(\theta|x)$', fontsize=15)
+	plt.savefig('rejection.png', bbox_inches='tight')
 	plt.show()
 	
 
@@ -138,6 +135,7 @@ def plot_metropolis_hastings(thetas, posteriors, thetas_mh, bins):
 
 	plt.xlabel(r'$\theta$', fontsize=15)
 	plt.ylabel(r'$\propto P(\theta|x)$', fontsize=15)
+	plt.savefig('metropolishastings.png', bbox_inches='tight')
 	plt.show()
 
 def plot_log(thetas, posteriors, numerical_thetas, bins):
@@ -153,6 +151,32 @@ def plot_log(thetas, posteriors, numerical_thetas, bins):
 	plt.ylabel(r'$\propto log(P(\theta|x))$', fontsize=15)
 	plt.show()
 
+def plot_log_both(thetas, posteriors, thetas_r, thetas_mh, bins):
+	""" Plot logarithm of histogram for both numerical methods in one figure"""
+	plt.figure()
+	plt.subplot(1, 2, 1)
+	plt.plot(thetas, -numpy.log(posteriors), linewidth=3)
+
+	hist, bin_edges = numpy.histogram(thetas_r, bins)	
+	bin_width = bin_edges[1] - bin_edges[0]
+	hist = hist / max(hist)
+	plt.bar(bin_edges[:-1], -numpy.log(hist), bin_width, color='green')
+	plt.xlabel(r'$\theta$', fontsize=15)
+	plt.ylabel(r'$\propto log(P(\theta|x))$', fontsize=15)
+
+	plt.subplot(1, 2, 2)
+	plt.plot(thetas, -numpy.log(posteriors), linewidth=3)
+
+	hist, bin_edges = numpy.histogram(thetas_mh, bins)	
+	bin_width = bin_edges[1] - bin_edges[0]
+	hist = hist / max(hist)
+	plt.bar(bin_edges[:-1], -numpy.log(hist), bin_width, color='green')
+	plt.xlabel(r'$\theta$', fontsize=15)
+	plt.ylabel(r'$\propto log(P(\theta|x))$', fontsize=15)
+
+	plt.savefig('bothlogs.png')
+	plt.show()
+
 def plot_burn_in(thetas_mh, posteriors_mh):
 	""" Burn-in plot for Metropolis-Hastings method """
 	step = list(range(1, len(thetas_mh)+1))
@@ -161,6 +185,7 @@ def plot_burn_in(thetas_mh, posteriors_mh):
 
 	plt.xlabel(r'$log(step)$', fontsize=15)
 	plt.ylabel(r'$\propto log(P(\theta|x))$', fontsize=15)
+	plt.savefig('burnin.png', bbox_inches='tight')
 	plt.show()
 
 def proposal_stdev_effects(posterior_stats, theta_initial, iterations, proposal_stdev_min = 0.06, proposal_stdev_max = 0.26, data_points = 20):
@@ -183,7 +208,7 @@ def proposal_stdev_effects(posterior_stats, theta_initial, iterations, proposal_
 	
 def plot_proposal(proposal_stdevs, acceptance_ratios, mh_stdevs):
 	""" Plots showing effect of changing te standard deviation of the proposal distribution """
-	plt.figure(1)
+	plt.figure()
 	plt.subplot(1, 2, 1)
 	# Plot acceptance ratio for different standard deviations of the proposal distribution 
 	plt.plot(proposal_stdevs, acceptance_ratios, marker='x', linestyle='none')
@@ -195,6 +220,7 @@ def plot_proposal(proposal_stdevs, acceptance_ratios, mh_stdevs):
 	plt.plot(proposal_stdevs, mh_stdevs, marker='x', linestyle='none')
 	plt.xlabel('Proposal Standard Deviation')
 	plt.ylabel('Posterior Standard Deviation')
+	plt.savefig('proposalstdev.png', bbox_inches='tight')
 	plt.show()
 	
 
@@ -213,7 +239,8 @@ def main():
 
 	bins = 100
 	# Number of stdevs from the mean over which analytical and rejection sampling results will be found
-	width = 6
+	width = 5
+	iterations = 100000
 
 	posterior_stats, theta_range = setup(population_mean, population_stdev, sample_size, prior_stdev, width)
 
@@ -223,14 +250,13 @@ def main():
 
 	if (args.mode == 'rejection') or (args.mode == 'all'):
 		# Rejection sampling
-		x_accepts = rejection_sampling(posterior_stats, theta_range)
+		x_accepts = rejection_sampling(posterior_stats, theta_range, iterations)
 		plot_rejection_sampling(thetas, posteriors, x_accepts, bins)
 		plot_log(thetas, posteriors, x_accepts, bins)
 
 	if (args.mode == 'metropolis_hastings') or (args.mode == 'proposal') or (args.mode == 'all'):
 		# Variables required by metropolis and proposal
-		theta_initial = 0.3
-		iterations = 100000
+		theta_initial = 0.2
 		
 	if (args.mode == 'metropolis_hastings') or (args.mode == 'all'):
 		# Metropolis-Hastings
@@ -240,6 +266,9 @@ def main():
 		plot_log(thetas, posteriors, thetas_mh, bins)
 
 		plot_burn_in(thetas_mh, posteriors_mh)
+	
+	if (args.mode =='all'):
+		plot_log_both(thetas, posteriors, x_accepts, thetas_mh, bins)
 
 	if (args.mode == 'proposal'):
 		# Effects of changing the proposal distributions standard deviation
