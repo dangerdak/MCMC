@@ -115,7 +115,7 @@ The likelihood distribution for a set of $N$ measurements is given by the produc
 	\mathcal{L}(\theta) &= \prod_{i=1}^{N} \frac{1}{\sqrt{2\pi}\sigma}\exp\left(-\frac{1}{2}\frac{(\theta - \hat{x}_i)^2}{\sigma^2}\right)
 	\\ &= \left(\frac{1}{\sqrt{2\pi}\sigma}\right)^N \exp\left(-\frac{1}{2}\sum_{i=1}^{N}(\frac{\theta - \hat{x}_i)^2}{\sigma^2}\right).
 \end{align*}
-Taking, for now, just the exponential, and using that $\bar{x} = \frac{1}{N} \sum_i \bar{x}_i \Rightarrow \sum_i \hat{x}_i = N \bar{x}$:
+Taking, for now, just the exponent, and using that $\bar{x} = \frac{1}{N} \sum_i \bar{x}_i \Rightarrow \sum_i \hat{x}_i = N \bar{x}$:
 \begin{align*}
 	-\frac{1}{2\sigma^2}\sum_i^N(\theta - \hat{x})^2 &= -\frac{1}{2\sigma^2}(N\theta^2 - 2\theta \sum_i^N\hat{x}_i + \sum_i^N \hat{x}_i^2) 
 	\\ &= -\frac{1}{2\sigma^2}(N\theta^2 - 2\theta N \bar{x} + \sum_i^N \hat{x}_i^2) 
@@ -158,7 +158,7 @@ Taking just the exponent,
 	\\ &= \left( \frac{1}{\Sigma^2} + \frac{N}{\sigma^2} \right) \left( \frac{1}{\sfrac{\sigma^2}{N} + \Sigma^2} \right) \left[ (\Sigma^2 + \frac{\sigma^2}{N})\theta^2 - 2\bar{x}\Sigma^2\theta + \Sigma^2\bar{x}^2 \right]
 	\\ &= \left( \frac{1}{\Sigma^2} + \frac{N}{\sigma^2} \right) \left( \theta^2 - 2 \frac{\Sigma^2}{\sfrac{\sigma^2}{N} + \Sigma^2} \theta + \frac{\Sigma^2}{\sfrac{\sigma^2}{N} + \Sigma^2} \bar{x}^2 \right).
 \end{align*}
-The final term above is independent of $\theta$. As we are dealing with an exponent, we can subtract this term and add its square without losing proportionality. This allows us to complete the square so we have:
+The final term above is independent of $\theta$. Thus, as we are dealing with an exponent, we can subtract this term and add its square without losing proportionality. This allows us to complete the square so we have:
 \begin{equation*}
 	\left( \frac{1}{\Sigma^2} + \frac{N}{\sigma^2} \right) \left( \theta - \frac{\Sigma^2}{\sfrac{\sigma^2}{N} + \Sigma^2} \bar{x} \right)^2.
 \end{equation*}
@@ -168,8 +168,48 @@ Putting this back inside the exponential we are left with:
 	p(\theta|x) \propto \exp \left[ -\frac{1}{2} \left( \frac{1}{\Sigma^2} + \frac{N}{\sigma^2} \right) \left( \theta - \frac{\Sigma^2}{\sfrac{\sigma^2}{N} + \Sigma^2} \bar{x} \right)^2 \right],
 \end{equation*}
 
-i.e. the posterior follows a Gaussian distribution with mean $\frac{\Sigma^2}{\sfrac{\sigma^2}{N} + \Sigma^2} \bar{x}$ and standard deviation $\left( \frac{1}{\Sigma^2} + \frac{N}{\sigma^2} \right)^{-\frac{1}{2}}$  
+i.e. the posterior follows a Gaussian distribution with mean $\frac{\Sigma^2}{\sfrac{\sigma^2}{N} + \Sigma^2} \bar{x}$ and standard deviation $\left( \frac{1}{\Sigma^2} + \frac{N}{\sigma^2} \right)^{-\frac{1}{2}}$.
 
+\section{Asymptotic Independence of Posterior on Prior}
+For the posterior
+\begin{equation*}
+	p(\theta|x) \propto \exp \left[-\frac{1}{2} \frac{ \left( \theta - \frac{\Sigma^2}{\sfrac{\sigma^2}{N} + \Sigma^2} \bar{x} \right)^2}{ \left( \frac{1}{\Sigma^2} + \frac{N}{\sigma^2} \right)^{-1}} \right],
+\end{equation*}
+$
+\begin{array}{l l l l}
+	\text{as }N \rightarrow \infty, &\quad 
+	\\ &\quad \left( \frac{1}{\Sigma^2} + \frac{N}{\sigma^2} \right)^{-1} &\rightarrow \frac{\sigma^2}{N} \quad &\left(\frac{N}{\sigma^2} \gg \frac{1}{\Sigma^2}\right), 
+	\\ &\quad \frac{\Sigma^2}{\sfrac{\sigma^2}{N} + \Sigma^2} \bar{x} &\rightarrow \bar{x} \quad &\left(\frac{\sigma^2}{N} \rightarrow 0\right),
+\end{array}
+$
+and the posterior becomes
+\begin{equation*}
+	p(\theta|x) \propto \exp \left[-\frac{1}{2} \frac{(\theta - \bar{x})^2}{\sfrac{\sigma^2}{N}} \right], 
+\end{equation*}
+i.e. the likelihood.
+
+\section{Asymptotic Convergence of the Posterior Mean to the MLE Mean for Theta}
+The posterior mean is given by:
+\begin{equation*}
+	\langle \theta \rangle = \int_{-\infty}^{+\infty} \theta p(\theta|x) \mathrm{d} \, \theta.
+\end{equation*}
+Inserting our equation for the posterior for $N \rightarrow \infty$, we have
+\begin{equation*}
+	\langle \theta \rangle = \int_{-\infty}^{+\infty} \theta \exp \left[- \frac{1}{2} \frac{(\theta - \bar{x})^2}{\sfrac{\sigma^2}{N}} \right] \mathrm{d} \, \theta. 
+\end{equation*}
+Making the substitution $y = \theta - \bar{x}$:
+\begin{align*}
+	\langle \theta \rangle &= \int_{-\infty}^{+\infty} (y+\bar{x})  \exp \left[- \frac{1}{2} \frac{y^2}{\sfrac{\sigma^2}{N}} \right] \mathrm{d} \, y
+	\\ &= \int_{-\infty}^{+\infty} \bar{x} \exp \left(- \frac{1}{2}\frac{N}{\sigma^2} y^2 \right) \mathrm{d} \, y,
+\end{align*}
+as $ y \exp \left(- \frac{1}{2}\frac{N}{\sigma^2} y^2 \right) $ is an odd function.
+
+Substituting back:
+\begin{align*}
+	\int_{-\infty}^{+\infty} \bar{x} \exp \left[- \frac{N}{\sigma^2} (\theta - \bar{x})^2 \right] \mathrm{d} \, \theta &= \bar{x} \int_{-\infty}^{+\infty} p(\theta|x) \mathrm{d} \, \theta
+	\\ &= \bar{x},
+\end{align*}
+as the integral of a pdf between infinite limits is equal to one. 
 \section{onedcode} 
 \label{sec:onedcode}
 
