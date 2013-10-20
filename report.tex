@@ -32,6 +32,9 @@ Dimensional Gaussian}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{abstract} 
+The Metropolis-Hastings algorithm was used to generate samples from a probability
+distribution. The samples were used, via maximum likelihood estimates to
+find Monte Carlo estimates for the parameters of the distribution.
 \end{abstract}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -39,32 +42,95 @@ Dimensional Gaussian}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction: What is MCMC?} 
-\subsection{Monte Carlo Methods, inc Rejection Sampling}
+Markov Chain Monte Carlo (MCMC) can be used to solve problems which would
+otherwise not be solvable - such as intractable integrations or sampling from
+complicated multivariate probability distributions.  
+
+While the idea has been
+around for much longer, MCMC has flourished since the rise of computers allowed
+much larger simulations. It was first used by Metropolis et al. at Los Alamos in
+1953 for thermodynamic simulations \cite(handbookch1).  
+
+\subsection{Monte Carlo Methods \& Ordinary Monte Carlo}
+Monte Carlo methods use random numbers to solve problems.  A Monte Carlo method
+may be more narrowly defined as
+"representing the solution of a problem as a parameter of a hypothetical
+population, and using a random sequence of numbers to construct a sample of the
+population, from which statistical estimates of the parameter can be found"
+\cite{halton}.  
+
+Ordinary Monte Carlo uses a sequence of random, independent identically distibuted
+numbers are used in
+
+A very simple example is a Monte Carlo estimate of $\pi$. Assume we have a
+circle of radius one, contained exactly within a square ranging [-1, 1]. The
+probability of random points from a uniform distribution within this range
+landing in the circle is given by:
+\begin{equation}
+	P(inside) = \frac{\text{area of circle}}{\text{area of square}} =
+	\frac{\pi}{4}.
+\end{equation}
+As there are only two possible outcomes for each simulation - a point lands
+either inside or outside of the circle - a  population of N points can be
+described by a binomial distribution in which a 'success' is a point landing within
+the circle:
+\begin{equation}
+	I \sim \mathcal{B}(N, \theta)
+\end{equation}
+where $\theta = P(\text{inside})$, and $I$ is the number of successes.
+Thus we have represented the solution of our problem as a parameter of a
+hypothetical population, that is a binomial population with unknown probability
+of success.
+We can estimate $\theta$ using its maximum-likelihood estimate \cite{som}, based
+on the number of success we observed in our random sampling:
+\begin{equation}
+	\theta = \frac{I}{N},
+\end{equation}
+
+So a Monte Carlo estimate for $\pi$ is given by
+\begin{equation}
+	\pi_{MC} = 4 \theta = 4 \frac{I}{N}.
+\end{equation}
+
+\subsection{Rejection Sampling}
+Rejection sampling is a particular type of Monte Carlo method which can be used
+if the target distribution can be evaluated, at least to within a normalization
+constant. 
+
+A random number $r$ is generated from some proposal distribution, $Q(\theta)$. A
+corresponding random number is generated from a uniform distribution in the
+range [0,$Q(\theta = r)$), representing a value on the y-axis. Both the
+proposal distribution and the target distribution, $P(\theta|x)$ are
+evaluated at this value. The probability of 'accepting' the sample is given by
+$\frac{P(\theta = r|x)}{Q(\theta = r)}$ - in practice this is implemented by accepting the
+sample if $y < P(\theta = r|x)$, and rejecting otherwise. The accepted points are
+effectively a series of samples from the target distribution. From these
+samples using the maximum-likelihood estimates for mean and variance gives the
+Monte Carlo estimates for said quantities. It is important that $Q(\theta) >
+P(\theta|x) \forall \, \theta$. 
 
 \subsection{Markov Chains} 
 \subsection{Metropolis-Hastings Algorithm}
 \subsection{Examples of Applications}
 
-\section{One-Dimensional Posterior} 
-The aim of the first part of this project was to find the posterior
-distribution for a quantity $\theta$, for the case of a Gaussian prior and a
-Gaussian likelihood. With our knowledge
-of the distribution thus far given by $p(\theta)$, Bayes theorem gives us a way
-to update our knowledge given a new set of measurements, $x$: 
+\section{One-Dimensional Target Distribution} 
+The aim of the first part of this project was to find the posterior distribution
+for a quantity $\theta$, for the case of a Gaussian prior and a Gaussian
+likelihood. With our knowledge of the distribution previously given by
+$p(\theta)$, Bayes theorem gives us a way to update our knowledge given a new
+set of measurements, $x$: 
 \begin{equation}
 	\label{eq:bayes}
 	p(\theta|x) = \frac{p(x|\theta)p(\theta)}{p(x)},
 \end{equation} 
-where $p(\theta|x)$ is the posterior, our updated knowledge,
-$p(x|\theta)$ is the likelihood of the data - the probability of observing
-those data as a function of $\theta$, $p(\theta)$ is the prior distribution,
-i.e. our knowledge before the measurements, and $p(x)$ is a normalizing
-constant.
+where $p(\theta|x)$ is the posterior, our updated knowledge, $p(x|\theta)$ is
+the likelihood of the data - the probability of observing those data as a
+function of $\theta$, $p(\theta)$ is the prior distribution, i.e. our knowledge
+before the measurements, and $p(x)$ is a normalizing constant.
 
-Measurements were simulated by generating a set of
-independent, Gaussian distributed variables, $\hat{x} = \{x_1, x_2, ...,
-x_N\}$, representing observed values for $\theta$. In this
-case we used that
+Measurements were simulated by generating a set of independent, Gaussian
+distributed variables, $\hat{x} = \{x_1, x_2, ..., x_N\}$, representing observed
+values for $\theta$. In this case we used that
 \begin{equation}
 	\label{eq:measurements}
 	p(\theta) \sim \mathcal{N}(0.5, 0.1),
@@ -97,7 +163,7 @@ with $\Sigma = 1$, Bayes theorem can be used to find the posterior distribution.
 \subsection{Metropolis-Hastings Algorithm} 
 \subsection{Analytical vs Rejection vs MH}
 
-\section{Two-Dimensional} 
+\section{Two-Dimensional Target Distribution} 
 \subsection{Analytical Solution}
 \subsection{Metropolis-Hastings} 
 \subsection{Analytical vs MH}
@@ -219,6 +285,21 @@ as the integral of a pdf between infinite limits is equal to one.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{thebibliography}{10}
 
+	\bibitem{applications}
+		Diaconis, P., 2009. The Markov Chain Monte Carlo Revolution.
+		Bull. Amer. Math. Soc., Vol. 46, pp. 179-205
+
+	\bibitem{handbookch1}
+		Geyer, C., J., 2011. Handbook of Markov Chain Monte Carlo.
+		Chapman \& Hall/CRC, p.3
+		
+	\bibitem{halton}
+		Halton, J., H., 1970. A Retrospective and Prospective Survey of
+		the Monte Method. SIAM Rev., Vol. 12, No. 1, pp. 1-63
+	
+	\bibitem{som}
+		Trotta, R., 2012. Statistics of Measurement: Summary Handout.
+		Imperial College London, p. 14
 
 \end{thebibliography}
 
