@@ -121,11 +121,11 @@ def plot_rejection_sampling(thetas, posteriors, x_accepts, bins):
 	# Create strings to show numerical mean and standard deviation on graphs
 	mean = numpy.mean(x_accepts)
 	stdev = numpy.std(x_accepts)
-	display_string = ('$\mu_{MC} =$ {0:.3f} \n$\sigma_{MC} =$ {1:.3f}').format(mean, stdev)
+	display_string = ('$\mu_{{MC}} =$ {0:.3f} \n$\sigma_{{MC}} =$ {1:.3f}').format(mean, stdev)
 
-	plt.xlabel(r'$\theta$', fontsize=13)
-	plt.ylabel(r'$\propto P(\theta|x)$', fontsize=13)
-	plt.text(0.8, 0.8, display_string, transform=ax.transAxes, fontsize=13)
+	plt.xlabel(r'$\theta$', fontsize=16)
+	plt.ylabel(r'$\propto P(\theta|x)$', fontsize=16)
+	plt.text(0.7, 0.8, display_string, transform=ax.transAxes, fontsize=16)
 	plt.savefig('rejection.png', bbox_inches='tight')
 	plt.show()
 	
@@ -144,11 +144,11 @@ def plot_metropolis_hastings(thetas, posteriors, thetas_mh, bins):
 	# Create strings to show numerical mean and standard deviation on graphs
 	mean = numpy.mean(thetas_mh)
 	stdev = numpy.std(thetas_mh)
-	display_string = ('$\mu_{MC} =$ {0:.3f} \n$\sigma_{MC} =$ {1:.3f}').format(mean, stdev)
+	display_string = ('$\mu_{{MC}} =$ {0:.3f} \n$\sigma_{{MC}} =$ {1:.3f}').format(mean, stdev)
 
-	plt.xlabel(r'$\theta$', fontsize=13)
-	plt.ylabel(r'$\propto P(\theta|x)$', fontsize=13)
-	plt.text(0.8, 0.8, display_string, transform=ax.transAxes, fontsize=13)
+	plt.xlabel(r'$\theta$', fontsize=16)
+	plt.ylabel(r'$\propto P(\theta|x)$', fontsize=16)
+	plt.text(0.7, 0.8, display_string, transform=ax.transAxes, fontsize=16)
 	plt.savefig('metropolishastings.png', bbox_inches='tight')
 	plt.show()
 
@@ -165,11 +165,12 @@ def plot_log(thetas, posteriors, numerical_thetas, bins):
 	# Create strings to show numerical mean and standard deviation on graphs
 	mean = numpy.mean(numerical_thetas)
 	stdev = numpy.std(numerical_thetas)
-	display_string = ('$\mu_{MC} =$ {0:.3f} \n$\sigma_{MC} =$ {1:.3f}').format(mean, stdev)
+	display_string = ('$\mu_{{MC}} =$ {0:.3f} \n$\sigma_{{MC}} =$ {1:.3f}').format(mean, stdev)
 
-	plt.xlabel(r'$\theta$', fontsize=13)
-	plt.ylabel(r'$\propto log(P(\theta|x))$', fontsize=13)
-	plt.text(0.5, 0.5, display_string, transform=ax.transAxes, fontsize=13)
+	plt.xlabel(r'$\theta$', fontsize=16)
+	plt.ylabel(r'$\propto log(P(\theta|x))$', fontsize=16)
+	plt.text(0.5, 0.5, display_string, transform=ax.transAxes, fontsize=16)
+	plt.savefig('recentlog.png', bbox_inches='tight')
 	plt.show()
 
 def plot_log_both(thetas, posteriors, thetas_r, thetas_mh, bins):
@@ -179,11 +180,11 @@ def plot_log_both(thetas, posteriors, thetas_r, thetas_mh, bins):
 	# Create strings to show numerical mean and standard deviation on graphs
 	mean_r = numpy.mean(thetas_r)
 	stdev_r = numpy.std(thetas_r)
-	display_string_r = ('$\mu_{MC} =$ {0:.3f} \n$\sigma_{MC} =$ {1:.3f}').format(mean_r, stdev_r)
+	display_string_r = ('$\mu_{{MC}} =$ {0:.3f} \n$\sigma_{{MC}} =$ {1:.3f}').format(mean_r, stdev_r)
 
 	mean_mh = numpy.mean(thetas_mh)
 	stdev_mh = numpy.std(thetas_mh)
-	display_string_mh = ('$\mu_{MC} =$ {0:.3f} \n$\sigma_{MC} =$ {1:.3f}').format(mean_mh, stdev_mh)
+	display_string_mh = ('$\mu_{{MC}} =$ {0:.3f} \n$\sigma_{{MC}} =$ {1:.3f}').format(mean_mh, stdev_mh)
 	# Position relative to axes (0,1)
 	text_x = 0.55
 	text_y = 0.45
@@ -195,10 +196,10 @@ def plot_log_both(thetas, posteriors, thetas_r, thetas_mh, bins):
 	bin_width = bin_edges[1] - bin_edges[0]
 	hist = hist / max(hist)
 	ax1.bar(bin_edges[:-1], -numpy.log(hist), bin_width, color='green')
-	ax1.text(text_x, text_y, display_string_r, transform=ax1.transAxes, fontsize=13)
+	ax1.text(text_x, text_y, display_string_r, transform=ax1.transAxes, fontsize=16)
 
-	ax1.set_xlabel(r'$\theta$', fontsize=13)
-	ax1.set_ylabel(r'$\propto log(P(\theta|x))$', fontsize=13)
+	ax1.set_xlabel(r'$\theta$', fontsize=16)
+	ax1.set_ylabel(r'$\propto log(P(\theta|x))$', fontsize=16)
 
 	# Metropolis-Hastings plot
 	ax2.plot(thetas, -numpy.log(posteriors), linewidth=3)
@@ -207,9 +208,9 @@ def plot_log_both(thetas, posteriors, thetas_r, thetas_mh, bins):
 	bin_width = bin_edges[1] - bin_edges[0]
 	hist = hist / max(hist)
 	ax2.bar(bin_edges[:-1], -numpy.log(hist), bin_width, color='green')
-	ax2.text(text_x, text_y, display_string_mh, transform=ax2.transAxes, fontsize=13)
+	ax2.text(text_x, text_y, display_string_mh, transform=ax2.transAxes, fontsize=16)
 
-	ax2.set_xlabel(r'$\theta$', fontsize=13)
+	ax2.set_xlabel(r'$\theta$', fontsize=16)
 
 	plt.savefig('bothlogs.png')
 	plt.show()
@@ -222,8 +223,8 @@ def plot_burn_in(iterations, thetas_mh, posteriors_mh):
 	plt.xlim(-100)
 	plt.ylim(0.05, 0.6)
 
-	plt.xlabel('Iteration', fontsize=13)
-	plt.ylabel(r'$\theta$', fontsize=13)
+	plt.xlabel('Iteration', fontsize=16)
+	plt.ylabel(r'$\theta$', fontsize=16)
 	plt.savefig('burnin.png', bbox_inches='tight')
 	plt.show()
 
