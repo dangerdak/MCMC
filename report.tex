@@ -10,6 +10,7 @@
 % Images
 \usepackage{graphicx} 
 \usepackage{caption}
+\usepackage{subcaption}
 
 % URLs
 \usepackage{hyperref}
@@ -41,15 +42,16 @@ find Monte Carlo estimates for the parameters of the distribution.
 \tableofcontents
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Introduction: What is MCMC?} 
+\section{Background} 
 Markov Chain Monte Carlo (MCMC) can be used to solve problems which would
 otherwise not be solvable - such as intractable integrations or sampling from
 complicated multivariate probability distributions.  
 
-While the idea has been
+While the idea of Monte Carlo simulations has been
 around for much longer, MCMC has flourished since the rise of computers allowed
-much larger simulations. It was first used by Metropolis et al. at Los Alamos in
-1953 for thermodynamic simulations \cite(handbookch1).  
+much larger simulations. It was originally developed by Metropolis et al. at Los Alamos in
+1953 to investigate the equation of state for substances consisting of
+individual interacting molecules \cite{metropolis}.  
 
 \subsection{Monte Carlo Methods \& Ordinary Monte Carlo}
 Monte Carlo methods use random numbers to solve problems.  A Monte Carlo method
@@ -99,7 +101,7 @@ constant.
 
 A random number $r$ is generated from some proposal distribution, $Q(\theta)$. A
 corresponding random number is generated from a uniform distribution in the
-range [0,$Q(\theta = r)$), representing a value on the y-axis. Both the
+range [0,$Q(\theta = r)$], representing a value on the y-axis. Both the
 proposal distribution and the target distribution, $P(\theta|x)$ are
 evaluated at this value. The probability of 'accepting' the sample is given by
 $\frac{P(\theta = r|x)}{Q(\theta = r)}$ - in practice this is implemented by accepting the
@@ -114,7 +116,7 @@ P(\theta|x) \forall \, \theta$.
 \subsection{Examples of Applications}
 
 \section{One-Dimensional Target Distribution} 
-The aim of the first part of this project was to find the posterior distribution
+The posterior was found
 for a quantity $\theta$, for the case of a Gaussian prior and a Gaussian
 likelihood. With our knowledge of the distribution previously given by
 $p(\theta)$, Bayes theorem gives us a way to update our knowledge given a new
@@ -129,7 +131,7 @@ function of $\theta$, $p(\theta)$ is the prior distribution, i.e. our knowledge
 before the measurements, and $p(x)$ is a normalizing constant.
 
 Measurements were simulated by generating a set of independent, Gaussian
-distributed variables, $\hat{x} = \{x_1, x_2, ..., x_N\}$, representing observed
+distributed variables, $\hat{\mathbf{x}} = \{x_1, x_2, ..., x_N\}$, representing observed
 values for $\theta$. In this case we used that
 \begin{equation}
 	\label{eq:measurements}
@@ -137,7 +139,9 @@ values for $\theta$. In this case we used that
 \end{equation}
 in order to generate our results - i.e. that we have a population mean of 0.5,
 and a population variance of 0.1. If the data $\hat{x}$ had come from an actual
-experiment of course we would not know these two values.
+experiment of course we would not know these two values. N values were
+generated, resulting in a sample mean of $\bar{x} = 0.464$, and a sample
+standard deviation of $\sigma = 0.075$.
 The likelihood function for the data $\hat{x}$ is given by:
 
 \begin{equation}
@@ -157,10 +161,91 @@ Assuming the following prior distribution:
 	\label{eq:prior}
 	p(\theta) =  \frac{1}{\sqrt{2\pi}}\exp\left(-\frac{1}{2}\frac{\theta^2}{\Sigma^2}\right),
 \end{equation}
-with $\Sigma = 1$, Bayes theorem can be used to find the posterior distribution.
+Bayes theorem can be used to find the posterior distribution.
+
 \subsection{Analytical Solution}
+In this case we have a simple gaussian prior and likelihood, and it can be shown
+that the resulting posterior is also a gaussian (see \cref{sec:posterior}).
+Because we know the form of the equation for a gaussian distribution, it can be
+seen that the posterior mean and standard deviation are given by:
+\begin{equation}
+	\mu_{post} = \frac{\Sigma^2}{\sfrac{\sigma^2}{N} + \Sigma^2} \bar{x},
+\end{equation}
+
+\begin{equation}
+	\sigma_{post} = \left( \frac{1}{\Sigma^2} + \frac{N}{\sigma^2} \right)^{-\frac{1}{2}}.
+\end{equation}
+
+This analytical solution gives us something to which our MCMC results can be
+compared. However, in real world applications of MCMC, of course this would not
+be available.
+
 \subsection{Rejection Sampling} 
+First a simple Monte Carlo method - rejection sampling - was applied to our toy
+problem.
+\begin{figure}[ht]
+	\centering
+	\begin{subfigure}[t]{0.4\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{rejection.png}
+		\caption{The histogram in green represents the distribution
+			found by rejection sampling. The Monte Carlo mean and standard
+			deviation are found to be $\mu_{MC} = 0.what$ and $\mu_{MC} = 0.0wat$.
+			The blue line is the analytical distribution.}
+		\label{fig:rejection}
+	\end{subfigure}
+	~
+	\begin{subfigure}[t]{0.4\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{recentlog.png}
+		\caption{A log-plot makes it easier to see the discrepencies at
+			the extremeties of the plot. These are due to the finite
+		domain over which samples are taken using this method.}
+		\label{fig:rejlog}
+	\end{subfigure}
+\end{figure}
+
+In \cref{fig:rejection}, the results appear to fit the analytical curve well.
+However, plotting the logarithm of the results allows us to see clearly differences at
+the edges of our Monte Carlo sample - this is because we can't take samples over
+an infinite domain, and in this algorithm we must choose definite cut-off
+points. The wider the domain the smaller the effect of this will be, but the
+number of rejected candidate points will be larger. As there always has to be a
+cut-off somewhere, this is an area where the Metropolis-Hastings algorithm will
+be more effective (RANDOM WALK???). (AND ALSO ERROR - HOW DOES IT GO WITH MORE
+DIMENSIONS??? - AND
+EFFICIENCY???) (AND OTHER WAYS IT'S BETTER???).
+
 \subsection{Metropolis-Hastings Algorithm} 
+The Metropolis-Hastings algorithm was then applied to the same problem. 
+\begin{figure}[ht]
+	\centering
+	\begin{subfigure}[t]{0.4\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{metropolishastings.png}
+		\caption{The histogram in green represents the distribution
+			found by the Metropolis-Hastings algorithm. The Monte Carlo mean and standard
+			deviation are found to be $\mu_{MC} = 0.what$ and $\mu_{MC} = 0.0wat$.
+			The blue line is the analytical distribution.}
+		\label{fig:metropolis}
+	\end{subfigure}
+	~
+	\begin{subfigure}[t]{0.4\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{recentlog.png}
+		\caption{A log-plot of the Metropolis-Hastings results shows
+		that the sample is more consistent with the analytical solution,
+	as compared with \cref{fig:rejlog}.}
+		\label{fig:mhlog}
+	\end{subfigure}
+\end{figure}
+
+BURN-IN??? - INC MULTIPLE STARTS CONVERGING
+
+PROPOSAL SIGMA/ACCEPTANCE RATE???
+
+MC SIGMA INDEPENDENT OF PROPOSAL SIGMA
+
 \subsection{Analytical vs Rejection vs MH}
 
 \section{Two-Dimensional Target Distribution} 
@@ -196,6 +281,7 @@ So
 where $L_0 = \left( \frac{1}{\sqrt{2\pi}} \right)^N \exp \left(- \frac{N}{2 \sigma^2}(\frac{1}{N} \sum_i \hat{x}_i^2 - \bar{x}^2)\right)$.
 
 \section{Computing the Posterior Probability for Theta}
+\label{sec:posterior}
 Bayes theorem is given by:
 \begin{align*}
 	p(\theta|x) = \frac{p(x|\theta)p(\theta)}{p(x)}.
@@ -284,6 +370,13 @@ as the integral of a pdf between infinite limits is equal to one.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{thebibliography}{10}
+
+
+	\bibitem{metropolis}
+		Metropolis et al. (1953) Equation of State Calculations by Fast
+		Computing Machines. The Journal of Chemical Physics.
+		[Online] 21 (6), 1087-1092. Available from: doi:
+		10.1063/1.1699114 [Accessed 21 October 2013].
 
 	\bibitem{applications}
 		Diaconis, P., 2009. The Markov Chain Monte Carlo Revolution.
