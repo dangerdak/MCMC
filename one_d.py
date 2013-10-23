@@ -121,7 +121,7 @@ def plot_rejection_sampling(thetas, posteriors, x_accepts, bins):
 	# Create strings to show numerical mean and standard deviation on graphs
 	mean = numpy.mean(x_accepts)
 	stdev = numpy.std(x_accepts)
-	display_string = ('$\mu =$ {0:.3f} \n$\sigma =$ {1:.3f}').format(mean, stdev)
+	display_string = ('$\mu_{MC} =$ {0:.3f} \n$\sigma_{MC} =$ {1:.3f}').format(mean, stdev)
 
 	plt.xlabel(r'$\theta$', fontsize=13)
 	plt.ylabel(r'$\propto P(\theta|x)$', fontsize=13)
@@ -144,7 +144,7 @@ def plot_metropolis_hastings(thetas, posteriors, thetas_mh, bins):
 	# Create strings to show numerical mean and standard deviation on graphs
 	mean = numpy.mean(thetas_mh)
 	stdev = numpy.std(thetas_mh)
-	display_string = ('$\mu =$ {0:.3f} \n$\sigma =$ {1:.3f}').format(mean, stdev)
+	display_string = ('$\mu_{MC} =$ {0:.3f} \n$\sigma_{MC} =$ {1:.3f}').format(mean, stdev)
 
 	plt.xlabel(r'$\theta$', fontsize=13)
 	plt.ylabel(r'$\propto P(\theta|x)$', fontsize=13)
@@ -165,7 +165,7 @@ def plot_log(thetas, posteriors, numerical_thetas, bins):
 	# Create strings to show numerical mean and standard deviation on graphs
 	mean = numpy.mean(numerical_thetas)
 	stdev = numpy.std(numerical_thetas)
-	display_string = ('$\mu =$ {0:.3f} \n$\sigma =$ {1:.3f}').format(mean, stdev)
+	display_string = ('$\mu_{MC} =$ {0:.3f} \n$\sigma_{MC} =$ {1:.3f}').format(mean, stdev)
 
 	plt.xlabel(r'$\theta$', fontsize=13)
 	plt.ylabel(r'$\propto log(P(\theta|x))$', fontsize=13)
@@ -179,11 +179,11 @@ def plot_log_both(thetas, posteriors, thetas_r, thetas_mh, bins):
 	# Create strings to show numerical mean and standard deviation on graphs
 	mean_r = numpy.mean(thetas_r)
 	stdev_r = numpy.std(thetas_r)
-	display_string_r = ('$\mu =$ {0:.3f} \n$\sigma =$ {1:.3f}').format(mean_r, stdev_r)
+	display_string_r = ('$\mu_{MC} =$ {0:.3f} \n$\sigma_{MC} =$ {1:.3f}').format(mean_r, stdev_r)
 
 	mean_mh = numpy.mean(thetas_mh)
 	stdev_mh = numpy.std(thetas_mh)
-	display_string_mh = ('$\mu =$ {0:.3f} \n$\sigma =$ {1:.3f}').format(mean_mh, stdev_mh)
+	display_string_mh = ('$\mu_{MC} =$ {0:.3f} \n$\sigma_{MC} =$ {1:.3f}').format(mean_mh, stdev_mh)
 	# Position relative to axes (0,1)
 	text_x = 0.55
 	text_y = 0.45
