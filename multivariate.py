@@ -1,5 +1,6 @@
 import numpy as np
 import random
+import matplotlib.pyplot as plt
 
 def import_data(textfile, uncertainty):
 	"""Import measurements from file. Each x and y pair on its own line, delimited by ', '
@@ -106,7 +107,7 @@ def calculate_hastings_ratio(ln_proposed, ln_current):
 	return hastings
 	
 def metropolis_hastings(posterior_stats):
-	iterations = 10000
+	iterations = 50000
 	thetas = np.array([[-0.05], [0.5]])
 	proposal_stdev = np.array([[0.1], [0.1]])
 	ln_posterior = calculate_ln_posterior(thetas, posterior_stats)
@@ -133,6 +134,20 @@ def metropolis_hastings(posterior_stats):
 	acceptance_ratio = accepts / iterations
 
 	return mcmc, acceptance_ratio
+
+def plot_samples(mcmc):
+	grid_size = 200
+	counts, x_edges, y_edges, image = plt.hist2d(mcmc['samples'][0], mcmc['samples'][1], bins=grid_size)
+	fig1 = plt.figure()
+	
+	plt.contourf(x_edges[:-1], y_edges[:-1], counts)
+	plt.show()
+
+	# PLOT BELOW COMES OUT WRONG
+	
+	return counts
+
+
 	
 
 def main():
@@ -148,6 +163,8 @@ def main():
 	print(acceptance_ratio)
 	print('mcmc sample examples:')
 	print(mcmc['samples'].shape)
+
+	plot_samples(mcmc)
 
 
 if __name__ == '__main__':
