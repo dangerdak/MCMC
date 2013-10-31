@@ -1,4 +1,5 @@
 import numpy as np
+import random
 
 def import_data(textfile, uncertainty):
 	"""Import measurements from file. Each x and y pair on its own line, delimited by ', '
@@ -33,6 +34,7 @@ def get_likelihood_fisher_matrix(A):
 	return likelihood_fisher
 
 def get_prior_fisher_matrix():
+	"""Prior fisher matrix for this case. """
 	P = 0.1 * np.eye(2)
 	
 	return P
@@ -83,18 +85,38 @@ def analytical(posterior_stats):
 	# ??? Dont think I need this unless analytical contours need it......
 
 	return analytical_posteriors
+
+def calculate_ln_posterior(thetas, posterior_stats):
+	ln_posterior = np.dot(posterior_stats['fisher'], (thetas - posterior_stats['mean']))
+	ln_posterior = - np.dot((thetas - posterior_stats['mean']).transpose(), ln_posterior) /2
+
+	return ln_posterior
+
+def generate_candidates(thetas, proposal_stdev):
+	thetas_proposed = np.zeros((2, 1))
+	thetas_proposed[0][0] = random.gauss(thetas[0][0], proposal_stdev[0][0])
+	thetas_proposed[1][0] = random.gauss(thetas[1][0], proposal_stdev[1][0])
+	
+	return thetas_proposed
+
+def calculate_hastings_ratio(ln_proposed, ln_current):
+	ln_hastings = ln_proposed - ln_current
+	hastings = np.exp(ln_hastings)
+
+	return hastings
 	
 def metropolis_hastings(posterior_stats):
 	iterations = 10000
-	thetas, proposal_stdev = initialise()
+	thetas = np.array([[-0.05], [0.5]])
+	proposal_stdev = np.array([[0.1], [0.1]])
 	ln_posterior = calculate_ln_posterior(thetas, posterior_stats)
 	accepts = 0
-	mcmc_samples = []
+	mcmc_samples = thetas 
 
 	for i in range(iterations):
 		thetas_proposed = generate_candidates(thetas, proposal_stdev)
 		ln_posterior_proposed = calculate_ln_posterior(thetas_proposed, posterior_stats)
-
+		
 		hastings_ratio = calculate_hastings_ratio(ln_posterior_proposed, ln_posterior)	
 		
 		acceptance_probability = min([1, hastings_ratio])
@@ -104,22 +126,29 @@ def metropolis_hastings(posterior_stats):
 			thetas = thetas_proposed
 			ln_posterior = ln_posterior_proposed
 			accepts += 1
+		mcmc_samples = np.hstack((mcmc_samples, thetas))
 
-		mcmc_samples.append(thetas)
-
+	mcmc_mean = np.array([ [np.mean(mcmc_samples[0])], [np.mean(mcmc_samples[1])] ])
+	mcmc = {'samples': mcmc_samples, 'mean': mcmc_mean} 
 	acceptance_ratio = accepts / iterations
-		
-	return mcmc_samples, acceptance_ratio
+
+	return mcmc, acceptance_ratio
 	
 
 def main():
 	measurement_uncertainty = 0.1
 	posterior_stats = setup(measurement_uncertainty)
+	print('analytical mean:')
 	print(posterior_stats['mean'])
 
-	mcmc_samples, acceptance_ratio = metropolis_hastings(posterior_stats)
+	mcmc, acceptance_ratio = metropolis_hastings(posterior_stats)
+	print('mcmc mean:')
+	print(mcmc['mean'])
+	print('acceptance ratio:')
+	print(acceptance_ratio)
+	print('mcmc sample examples:')
+	print(mcmc['samples'].shape)
 
-	plot()
 
 if __name__ == '__main__':
 	main()
