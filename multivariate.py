@@ -36,9 +36,9 @@ def get_likelihood_fisher_matrix(A):
 
 def get_prior_fisher_matrix():
 	"""Prior fisher matrix for this case. """
-	P = 0.1 * np.eye(2)
+	prior_fisher = 0.1 * np.eye(2)
 	
-	return P
+	return prior_fisher 
 
 def get_posterior_fisher_matrix(likelihood_fisher, P):
 	posterior_fisher = likelihood_fisher + P
@@ -135,16 +135,39 @@ def metropolis_hastings(posterior_stats):
 
 	return mcmc, acceptance_ratio
 
-def plot_samples(mcmc):
-	grid_size = 200
-	counts, x_edges, y_edges, image = plt.hist2d(mcmc['samples'][0], mcmc['samples'][1], bins=grid_size)
-	fig1 = plt.figure()
+def edges_to_centers(x_edges, y_edges, res):
+	dx = (max(x_edges) - min(x_edges)) / res
+	dy = (max(y_edges) - min(y_edges)) / res
+
+	x = x_edges + dx /2 
+	y = y_edges + dy /2 
+	x = x[:-1]
+	y = y[:-1]
+
+	return x, y
+
+def equal_weight(counts, res):
+	multiplicity = counts / counts.max()
+	randoms = np.random.random((res, res))
+
+	equal_weighted_samples = multiplicity < randoms
+
+	equal_weighted_samples = np.rot90(equal_weighted_samples)
+	equal_weighted_samples = np.flipud(equal_weighted_samples)
+
+	return equal_weighted_samples
 	
-	plt.contourf(x_edges[:-1], y_edges[:-1], counts)
+
+def plot_samples(mcmc):
+	res = 200
+	counts, x_edges, y_edges = np.histogram2d(mcmc['samples'][0], mcmc['samples'][1], bins=res)
+	
+	# ??? Sort out axes
+	equal_weighted_samples = equal_weight(counts, res)
+	plt.pcolormesh(x_edges, y_edges, equal_weighted_samples, cmap=plt.cm.gray)
+
 	plt.show()
 
-	# PLOT BELOW COMES OUT WRONG
-	
 	return counts
 
 
