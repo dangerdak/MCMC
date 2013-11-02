@@ -253,9 +253,6 @@ def plot_marginalized(mcmc, res):
 	plt.tick_params(axis='both', labelleft='off', labelbottom='off')
 
 	marginalized = marginalize(counts)
-	print(y_edges.shape)
-	print(marginalized['theta_2'].shape)
-
 
 	plt.subplot(gs[3])
 	plt.bar(x_edges[:-1], marginalized['theta_1'], x_edges[1]-x_edges[0], color='white')
@@ -306,15 +303,6 @@ def ellipse_lengths(axis1, axis2):
 	return major, minor
 
 def ellipse_angle(dx, dy):
-	print('\ndx')
-	print(dx)
-	print('\ndy')
-	print(dy)
-	print('\ndy/dx')
-	print(dy/dx)
-	print('\natan(dy/dx)')
-	print(math.atan(dy/dx))
-
 	angle = math.atan(dx/dy)
 
 	return angle
@@ -330,7 +318,6 @@ def find_ellipse(mean, eigenval, eigenvec, level):
 	
 	return ellipse
 
-
 def analytical_contours(posterior_stats):
 	covariance = np.linalg.inv(posterior_stats['fisher'])
 	eigenval, eigenvec = np.linalg.eigh(covariance)
@@ -339,9 +326,9 @@ def analytical_contours(posterior_stats):
 	sigma2 = find_ellipse(posterior_stats['mean'].flatten(), eigenval, eigenvec, 2)
 	sigma3 = find_ellipse(posterior_stats['mean'].flatten(), eigenval, eigenvec, 3)
 
-	ellipse1 = Ellipse(xy=sigma1['mean'], width=sigma1['width'], height=sigma1['height'], angle=sigma1['angle'], visible=True)	
-	ellipse2 = Ellipse(xy=sigma2['mean'], width=sigma2['width'], height=sigma2['height'], angle=sigma2['angle'], visible=True)	
-	ellipse3 = Ellipse(xy=sigma3['mean'], width=sigma3['width'], height=sigma3['height'], angle=sigma3['angle'], visible=True)	
+	ellipse1 = Ellipse(xy=sigma1['mean'], width=sigma1['width'], height=sigma1['height'], angle=sigma1['angle'], visible=True, facecolor='none', edgecolor='red', linewidth=2)	
+	ellipse2 = Ellipse(xy=sigma2['mean'], width=sigma2['width'], height=sigma2['height'], angle=sigma2['angle'], visible=True, facecolor='none', edgecolor='red', linewidth=2)	
+	ellipse3 = Ellipse(xy=sigma3['mean'], width=sigma3['width'], height=sigma3['height'], angle=sigma3['angle'], visible=True, facecolor='none', edgecolor='red', linewidth=2)	
 
 	plt.figure()
 	ax = plt.gca()
@@ -350,11 +337,10 @@ def analytical_contours(posterior_stats):
 	ax.add_patch(ellipse1)
 	ax.set_xlim(-0.4, 0.4)
 	ax.set_ylim(0.5, 2.0)
+	plt.plot(posterior_stats['mean'][0], posterior_stats['mean'][1], 'rx', markersize=8, mew=2)
+	plt.xlabel(r'$\theta_1$')
+	plt.ylabel(r'$\theta_2$')
 	plt.show()
-
-	print('\n angle')
-	print(sigma1['angle'])
-
 
 def main():
 	measurement_uncertainty = 0.1
