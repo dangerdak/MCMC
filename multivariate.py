@@ -2,6 +2,8 @@ import numpy as np
 import random
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+import math
+import matplotlib.patches as patches
 
 def import_data(textfile, uncertainty):
 	"""Import measurements from file. Each x and y pair on its own line, delimited by ', '
@@ -70,6 +72,11 @@ def setup(measurement_uncertainty):
 	b = data['y'] / measurement_uncertainty
 	mle = get_mle(likelihood_fisher, A, b)
 	posterior_mean = get_posterior_mean(likelihood_fisher, posterior_fisher, mle)
+
+	# ??? Print covariance matrix
+	covar = np.linalg.inv(posterior_fisher)
+	print('covariance matrix:')
+	print(covar)
 
 	posterior_stats = {'fisher': posterior_fisher, 'mean': posterior_mean}
 
@@ -235,14 +242,15 @@ def marginalize(counts):
 
 def plot_marginalized(mcmc, res):
 	fig = plt.figure(1, figsize=(7,7))
-	fig.subplots_adjust(hspace=0.001, wspace=0.001, left=0.10, bottom=0.095, top=0.975, right=0.98)
+	fig.subplots_adjust(hspace=0.001, wspace=0.001)
 	gs = gridspec.GridSpec(2, 2, width_ratios=[1,4], height_ratios=[4,1])
 
 	counts, x_edges, y_edges = np.histogram2d(mcmc['samples'][0], mcmc['samples'][1], bins=res)
 	counts = np.flipud(np.rot90(counts))
 
 	plt.subplot(gs[1])
-	plt.pcolormesh(x_edges, y_edges, counts, cmap=plt.cm.BuGn)
+	plt.pcolormesh(x_edges, y_edges, counts, cmap=plt.cm.binary)
+	plt.tick_params(axis='both', labelleft='off', labelbottom='off')
 
 	marginalized = marginalize(counts)
 	print(y_edges.shape)
@@ -251,10 +259,106 @@ def plot_marginalized(mcmc, res):
 
 	plt.subplot(gs[3])
 	plt.bar(x_edges[:-1], marginalized['theta_1'], x_edges[1]-x_edges[0], color='white')
+	plt.tick_params(axis='y', labelleft='off')
+	plt.xlabel(r'$\theta_1$')
+	plt.ylabel(r'P')
 
 	plt.subplot(gs[0])
 	plt.barh(y_edges[:-1], marginalized['theta_2'], y_edges[1]-y_edges[0], color='white')
+	plt.tick_params(axis='x', labelbottom='off')
+	plt.ylabel(r'$\theta_2$')
+	plt.xlabel(r'P')
 	plt.show()
+
+def ellipse_coords(mean, eigenval, eigenvec, level):
+	chi_square = {'1': 2.30, '2': 6.18, '3': 11.83}
+	level = str(level)
+
+	axis1 = []
+	print('axis1:')
+	print(axis1)
+
+	axis1.append(mean + (np.sqrt(chi_square[level] * eigenval[0]) * eigenvec[:,0]))
+	print('mean:')
+	print(mean.flatten())
+	print('\n level')
+	print(chi_square[level])
+	print('\n eigenval0')
+	print(eigenval[0])
+	print('\n coeff:')
+	print(np.sqrt(chi_square[level] * eigenval[0]))
+	print('evec col0:')
+	print(eigenvec[:,0])
+	print('\n product:')
+	print(np.sqrt(chi_square[level] * eigenval[0]) * eigenvec[:,0])
+	print('sum:')
+	print(mean + (np.sqrt(chi_square[level] * eigenval[0]) * eigenvec[:,0]))
+	print('\n axis1:')
+	print(axis1)
+	axis1.append(mean - (np.sqrt(chi_square[level] * eigenval[0]) * eigenvec[:,0]))
+	print('\n axis1:')
+	print(axis1)
+	print('\n eval:')
+	print(eigenval)
+	print('\n evec:')
+	print(eigenvec)
+	
+	axis2 = []
+	axis2.append(mean + (np.sqrt(chi_square[level] * eigenval[1]) * eigenvec[:,1]))
+	axis2.append(mean - (np.sqrt(chi_square[level] * eigenval[1]) * eigenvec[:,1]))
+
+	return axis1, axis2
+
+def ellipse_lengths(axis1, axis2):
+	dx1 = axis1[0][0] - axis1[1][0]
+	print('\n dx1:')
+	print(dx1)
+	dy1 = axis1[0][1] - axis1[1][1]
+	length1 = math.sqrt(dx1**2 + dy1**2)
+
+	dx2 = axis2[0][0] - axis2[1][0]
+	dy2 = axis2[0][1] - axis2[1][1]
+	length2 = np.sqrt(dx2**2 + dy2**2)
+
+	major = {'length': length1, 'coords': axis1, 'dx': dx1, 'dy': dy1}
+	minor = {'length': length2, 'coords': axis2, 'dx' : dx2, 'dy': dy2}
+
+	if length1 > length2:
+		major = {'length': length1, 'coords': axis1, 'dx': dx1, 'dy': dy1}
+		minor = {'length': length2, 'coords': axis2, 'dx' : dx2, 'dy': dy2}
+	else:
+		major = {'length': length2, 'coords': axis2, 'dx': dx2, 'dy': dy2}
+		minor = {'length': length1, 'coords': axis1, 'dx': dx1, 'dy': dy1}
+
+	return major, minor
+
+def ellipse_angle(dx, dy):
+	angle = math.atan(dx/dy)
+
+	return angle
+
+def find_ellipse(mean, eigenval, eigenvec, level):
+	axis1, axis2 = ellipse_coords(mean, eigenval, eigenvec, level)
+	major, minor = ellipse_lengths(axis1, axis2)
+
+	angle = ellipse_angle(major['dx'], major['dy'])
+
+	ellipse = {'mean': mean, 'width': minor['length'], 'height': major['length'], 'angle':angle}
+	
+	return ellipse
+
+
+def analytical_contours(posterior_stats):
+	covariance = np.linalg.inv(posterior_stats['fisher'])
+	eigenval, eigenvec = np.linalg.eigh(covariance)
+
+	ellipse1 = find_ellipse(posterior_stats['mean'].flatten(), eigenval, eigenvec, 1)
+	ellipse2 = find_ellipse(posterior_stats['mean'].flatten(), eigenval, eigenvec, 2)
+	ellipse3 = find_ellipse(posterior_stats['mean'].flatten(), eigenval, eigenvec, 3)
+
+	patches.Ellipse(xy=ellipse1['mean'], width=ellipse1['width'], height=ellipse1['height'], angle=ellipse1['angle'])	
+	patches.Ellipse(xy=ellipse2['mean'], width=ellipse2['width'], height=ellipse2['height'], angle=ellipse2['angle'])	
+	patches.Ellipse(xy=ellipse3['mean'], width=ellipse3['width'], height=ellipse3['height'], angle=ellipse3['angle'])	
 
 
 
@@ -264,16 +368,17 @@ def main():
 	print('analytical mean:')
 	print(posterior_stats['mean'])
 
-	mcmc, acceptance_ratio = metropolis_hastings(posterior_stats)
-	print('mcmc mean:')
-	print(mcmc['mean'])
-	print('acceptance ratio:')
-	print(acceptance_ratio)
-	print('mcmc sample examples:')
-	print(mcmc['samples'].shape)
+	analytical_contours(posterior_stats)
+	#mcmc, acceptance_ratio = metropolis_hastings(posterior_stats)
+	#print('mcmc mean:')
+	#print(mcmc['mean'])
+	#print('acceptance ratio:')
+	#print(acceptance_ratio)
+	#print('mcmc sample examples:')
+	#print(mcmc['samples'].shape)
 
-	plot_samples(mcmc, 200)
-	plot_marginalized(mcmc, 200)
+	#plot_samples(mcmc, 200)
+	#plot_marginalized(mcmc, 200)
 
 
 if __name__ == '__main__':
