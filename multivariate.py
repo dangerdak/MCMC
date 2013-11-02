@@ -3,7 +3,7 @@ import random
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import math
-import matplotlib.patches as patches
+from matplotlib.patches import Ellipse
 
 def import_data(textfile, uncertainty):
 	"""Import measurements from file. Each x and y pair on its own line, delimited by ', '
@@ -275,34 +275,9 @@ def ellipse_coords(mean, eigenval, eigenvec, level):
 	level = str(level)
 
 	axis1 = []
-	print('axis1:')
-	print(axis1)
-
 	axis1.append(mean + (np.sqrt(chi_square[level] * eigenval[0]) * eigenvec[:,0]))
-	print('mean:')
-	print(mean.flatten())
-	print('\n level')
-	print(chi_square[level])
-	print('\n eigenval0')
-	print(eigenval[0])
-	print('\n coeff:')
-	print(np.sqrt(chi_square[level] * eigenval[0]))
-	print('evec col0:')
-	print(eigenvec[:,0])
-	print('\n product:')
-	print(np.sqrt(chi_square[level] * eigenval[0]) * eigenvec[:,0])
-	print('sum:')
-	print(mean + (np.sqrt(chi_square[level] * eigenval[0]) * eigenvec[:,0]))
-	print('\n axis1:')
-	print(axis1)
 	axis1.append(mean - (np.sqrt(chi_square[level] * eigenval[0]) * eigenvec[:,0]))
-	print('\n axis1:')
-	print(axis1)
-	print('\n eval:')
-	print(eigenval)
-	print('\n evec:')
-	print(eigenvec)
-	
+
 	axis2 = []
 	axis2.append(mean + (np.sqrt(chi_square[level] * eigenval[1]) * eigenvec[:,1]))
 	axis2.append(mean - (np.sqrt(chi_square[level] * eigenval[1]) * eigenvec[:,1]))
@@ -310,15 +285,13 @@ def ellipse_coords(mean, eigenval, eigenvec, level):
 	return axis1, axis2
 
 def ellipse_lengths(axis1, axis2):
-	dx1 = axis1[0][0] - axis1[1][0]
-	print('\n dx1:')
-	print(dx1)
+	dx1 = axis1[1][0] - axis1[0][0]
 	dy1 = axis1[0][1] - axis1[1][1]
 	length1 = math.sqrt(dx1**2 + dy1**2)
 
-	dx2 = axis2[0][0] - axis2[1][0]
+	dx2 = axis2[1][0] - axis2[0][0]
 	dy2 = axis2[0][1] - axis2[1][1]
-	length2 = np.sqrt(dx2**2 + dy2**2)
+	length2 = math.sqrt(dx2**2 + dy2**2)
 
 	major = {'length': length1, 'coords': axis1, 'dx': dx1, 'dy': dy1}
 	minor = {'length': length2, 'coords': axis2, 'dx' : dx2, 'dy': dy2}
@@ -333,6 +306,15 @@ def ellipse_lengths(axis1, axis2):
 	return major, minor
 
 def ellipse_angle(dx, dy):
+	print('\ndx')
+	print(dx)
+	print('\ndy')
+	print(dy)
+	print('\ndy/dx')
+	print(dy/dx)
+	print('\natan(dy/dx)')
+	print(math.atan(dy/dx))
+
 	angle = math.atan(dx/dy)
 
 	return angle
@@ -342,6 +324,7 @@ def find_ellipse(mean, eigenval, eigenvec, level):
 	major, minor = ellipse_lengths(axis1, axis2)
 
 	angle = ellipse_angle(major['dx'], major['dy'])
+	angle = angle * 180 / math.pi
 
 	ellipse = {'mean': mean, 'width': minor['length'], 'height': major['length'], 'angle':angle}
 	
@@ -352,14 +335,25 @@ def analytical_contours(posterior_stats):
 	covariance = np.linalg.inv(posterior_stats['fisher'])
 	eigenval, eigenvec = np.linalg.eigh(covariance)
 
-	ellipse1 = find_ellipse(posterior_stats['mean'].flatten(), eigenval, eigenvec, 1)
-	ellipse2 = find_ellipse(posterior_stats['mean'].flatten(), eigenval, eigenvec, 2)
-	ellipse3 = find_ellipse(posterior_stats['mean'].flatten(), eigenval, eigenvec, 3)
+	sigma1 = find_ellipse(posterior_stats['mean'].flatten(), eigenval, eigenvec, 1)
+	sigma2 = find_ellipse(posterior_stats['mean'].flatten(), eigenval, eigenvec, 2)
+	sigma3 = find_ellipse(posterior_stats['mean'].flatten(), eigenval, eigenvec, 3)
 
-	patches.Ellipse(xy=ellipse1['mean'], width=ellipse1['width'], height=ellipse1['height'], angle=ellipse1['angle'])	
-	patches.Ellipse(xy=ellipse2['mean'], width=ellipse2['width'], height=ellipse2['height'], angle=ellipse2['angle'])	
-	patches.Ellipse(xy=ellipse3['mean'], width=ellipse3['width'], height=ellipse3['height'], angle=ellipse3['angle'])	
+	ellipse1 = Ellipse(xy=sigma1['mean'], width=sigma1['width'], height=sigma1['height'], angle=sigma1['angle'], visible=True)	
+	ellipse2 = Ellipse(xy=sigma2['mean'], width=sigma2['width'], height=sigma2['height'], angle=sigma2['angle'], visible=True)	
+	ellipse3 = Ellipse(xy=sigma3['mean'], width=sigma3['width'], height=sigma3['height'], angle=sigma3['angle'], visible=True)	
 
+	plt.figure()
+	ax = plt.gca()
+	ax.add_patch(ellipse3)
+	ax.add_patch(ellipse2)
+	ax.add_patch(ellipse1)
+	ax.set_xlim(-0.4, 0.4)
+	ax.set_ylim(0.5, 2.0)
+	plt.show()
+
+	print('\n angle')
+	print(sigma1['angle'])
 
 
 def main():
