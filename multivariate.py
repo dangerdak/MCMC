@@ -1,6 +1,7 @@
 import numpy as np
 import random
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 
 def import_data(textfile, uncertainty):
 	"""Import measurements from file. Each x and y pair on its own line, delimited by ', '
@@ -111,7 +112,7 @@ def calculate_hastings_ratio(ln_proposed, ln_current):
 	
 def metropolis_hastings(posterior_stats):
 	"""Sample from posterior distribution using Metropolis-Hastings algorithm."""
-	iterations = 50000
+	iterations = 5000
 	thetas = np.array([[-0.05], [0.5]])
 	proposal_stdev = np.array([[0.1], [0.1]])
 	ln_posterior = calculate_ln_posterior(thetas, posterior_stats)
@@ -184,13 +185,22 @@ def find_numerical_contours(counts):
 	three_sigma_boundary = sigma_boundary(counts, 98)
 	three_sigma = (counts > three_sigma_boundary) & (counts < two_sigma_boundary)
 
+	# Check method: Output actual percentages in each region
+	print('total no. samples:')
+	print(np.sum(counts))
+	print('included in 1st sigma region:')
+	print(np.sum(one_sigma * counts) / np.sum(counts))
+	print('included in 2 sigma region:')
+	print(np.sum(one_sigma * counts) + np.sum(two_sigma * counts) / np.sum(counts))
+	print('included in 3 sigma region:')
+	print(np.sum(one_sigma * counts) + np.sum(two_sigma * counts) + np.sum(three_sigma * counts) / np.sum(counts))
+
 	filled_numerical_contours = one_sigma * 3 + two_sigma * 2 + three_sigma
 
 	return filled_numerical_contours
 
-def plot_samples(mcmc):
+def plot_samples(mcmc, res):
 	"""Plot numerical equal-weight samples and filled contours."""
-	res = 200
 	counts, x_edges, y_edges = np.histogram2d(mcmc['samples'][0], mcmc['samples'][1], bins=res)
 	counts = np.flipud(np.rot90(counts))
 	
@@ -203,7 +213,50 @@ def plot_samples(mcmc):
 	plt.pcolormesh(x_edges, y_edges, filled_numerical_contours, cmap=plt.cm.binary)
 	plt.show()
 
+	marginalized = marginalize(counts)
+	plt.bar(x_edges[:-1], marginalized['theta_1'], x_edges[1]-x_edges[0], color='white')
+	plt.show()
+
+	plt.bar(y_edges[:-1], marginalized['theta_2'], y_edges[1]-y_edges[0], color='white')
+	plt.show()
+
 	return counts
+	
+def marginalize(counts):
+	"""Find marginalized distribution for each parameter."""
+	# Sum columns
+	x_counts = np.sum(counts, axis=0)
+	# Sum rows
+	y_counts = np.sum(counts, axis=1)
+
+	marginalized = {'theta_1': x_counts, 'theta_2': y_counts}
+
+	return marginalized
+
+def plot_marginalized(mcmc, res):
+	fig = plt.figure(1, figsize=(7,7))
+	fig.subplots_adjust(hspace=0.001, wspace=0.001, left=0.10, bottom=0.095, top=0.975, right=0.98)
+	gs = gridspec.GridSpec(2, 2, width_ratios=[1,4], height_ratios=[4,1])
+
+	counts, x_edges, y_edges = np.histogram2d(mcmc['samples'][0], mcmc['samples'][1], bins=res)
+	counts = np.flipud(np.rot90(counts))
+
+	plt.subplot(gs[1])
+	plt.pcolormesh(x_edges, y_edges, counts, cmap=plt.cm.BuGn)
+
+	marginalized = marginalize(counts)
+	print(y_edges.shape)
+	print(marginalized['theta_2'].shape)
+
+
+	plt.subplot(gs[3])
+	plt.bar(x_edges[:-1], marginalized['theta_1'], x_edges[1]-x_edges[0], color='white')
+
+	plt.subplot(gs[0])
+	plt.barh(y_edges[:-1], marginalized['theta_2'], y_edges[1]-y_edges[0], color='white')
+	plt.show()
+
+
 
 def main():
 	measurement_uncertainty = 0.1
@@ -219,7 +272,8 @@ def main():
 	print('mcmc sample examples:')
 	print(mcmc['samples'].shape)
 
-	plot_samples(mcmc)
+	plot_samples(mcmc, 200)
+	plot_marginalized(mcmc, 200)
 
 
 if __name__ == '__main__':
