@@ -13,7 +13,8 @@ def import_data(textfile, uncertainty):
 		coords = line.strip()
 		coords = coords.split(', ')
 		x.append(coords[0])
-		y.append(coords[1])
+		y.append(coords[1]) 
+	
 	x = [float(i) for i in x]
 	x = np.array(x).reshape((10,1))
 	y = [float(i) for i in y]
@@ -135,6 +136,7 @@ def metropolis_hastings(posterior_stats):
 
 	return mcmc, acceptance_ratio
 
+# Do I uyse this ???
 def edges_to_centers(x_edges, y_edges, res):
 	dx = (max(x_edges) - min(x_edges)) / res
 	dy = (max(y_edges) - min(y_edges)) / res
@@ -156,7 +158,32 @@ def equal_weight(counts, res):
 	equal_weighted_samples = np.flipud(equal_weighted_samples)
 
 	return equal_weighted_samples
+
+def sigma_boundary(counts, percentage):
+	# Sort counts in descending order
+	counts_desc = sorted(counts.flatten(), reverse=True)
+	# Find cumulative sum of sorted counts
+	cumulative_counts = np.cumsum(counts_desc)
+	# Create a mask for counts outside of percentage boundary
+	sum_mask = cumulative_counts < (percentage /100) * np.sum(counts)
+	sigma_sorted = sum_mask * counts_desc
+	# Assume that density is ??? ellipse equivalent of radially symmetric
+	sigma_min = min(sigma_sorted[sigma_sorted.nonzero()])
+
+	return sigma_min
 	
+
+def find_sigma_contours(counts):
+	one_sigma_boundary = sigma_boundary(counts, 68)
+	one_sigma = counts > one_sigma_boundary
+	two_sigma_boundary = sigma_boundary(counts, 95)
+	two_sigma = (counts > two_sigma_boundary) & (counts < one_sigma_boundary)
+	three_sigma_boundary = sigma_boundary(counts, 98)
+	three_sigma = (counts > three_sigma_boundary) & (counts < two_sigma_boundary)
+
+	filled_sigma_contours = one_sigma * 3 + two_sigma * 2 + three_sigma
+
+	return np.flipud(np.rot90(filled_sigma_contours))
 
 def plot_samples(mcmc):
 	res = 200
@@ -164,14 +191,15 @@ def plot_samples(mcmc):
 	
 	# ??? Sort out axes
 	equal_weighted_samples = equal_weight(counts, res)
+	
 	plt.pcolormesh(x_edges, y_edges, equal_weighted_samples, cmap=plt.cm.gray)
+	plt.show()
 
+	filled_sigma_contours = find_sigma_contours(counts)
+	plt.pcolormesh(x_edges, y_edges, filled_sigma_contours, cmap=plt.cm.binary)
 	plt.show()
 
 	return counts
-
-
-	
 
 def main():
 	measurement_uncertainty = 0.1
