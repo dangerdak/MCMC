@@ -62,7 +62,7 @@ def get_posterior_mean(likelihood_fisher, posterior_fisher, mle):
 	return posterior_mean
 
 def setup(measurement_uncertainty):
-	"""Do calculations neccessary to find posterior mean and posterior fisher matrix"""
+	"""Do calculations neccessary to find posterior mean, posterior fisher and covariance matrix"""
 	data = import_data('dataset.txt', measurement_uncertainty)
 	design = get_design_matrix(data['x'])
 	A = design / measurement_uncertainty
@@ -73,12 +73,9 @@ def setup(measurement_uncertainty):
 	mle = get_mle(likelihood_fisher, A, b)
 	posterior_mean = get_posterior_mean(likelihood_fisher, posterior_fisher, mle)
 
-	# ??? Print covariance matrix
-	covar = np.linalg.inv(posterior_fisher)
-	print('covariance matrix:')
-	print(covar)
+	covariance = np.linalg.inv(posterior_fisher)
 
-	posterior_stats = {'fisher': posterior_fisher, 'mean': posterior_mean}
+	posterior_stats = {'fisher': posterior_fisher, 'mean': posterior_mean, 'covar': covariance}
 
 	return posterior_stats
 
@@ -142,7 +139,8 @@ def metropolis_hastings(posterior_stats):
 		mcmc_samples = np.hstack((mcmc_samples, thetas))
 
 	mcmc_mean = np.array([ [np.mean(mcmc_samples[0])], [np.mean(mcmc_samples[1])] ])
-	mcmc = {'samples': mcmc_samples, 'mean': mcmc_mean} 
+	covariance = np.cov(mcmc_samples)
+	mcmc = {'samples': mcmc_samples, 'mean': mcmc_mean, 'covar': covariance} 
 	acceptance_ratio = accepts / iterations
 
 	return mcmc, acceptance_ratio
@@ -307,7 +305,7 @@ def ellipse_angle(dx, dy):
 
 	return angle
 
-def find_ellipse(mean, eigenval, eigenvec, level):
+def find_ellipse_info(mean, eigenval, eigenvec, level):
 	axis1, axis2 = ellipse_coords(mean, eigenval, eigenvec, level)
 	major, minor = ellipse_lengths(axis1, axis2)
 
@@ -318,38 +316,43 @@ def find_ellipse(mean, eigenval, eigenvec, level):
 	
 	return ellipse
 
-def analytical_contours(posterior_stats):
-	covariance = np.linalg.inv(posterior_stats['fisher'])
-	eigenval, eigenvec = np.linalg.eigh(covariance)
+def contours(info, color, line, mean_marker):
+	"""Add contour lines and mean to current axes."""
+	eigenval, eigenvec = np.linalg.eigh(info['covar'])
 
-	sigma1 = find_ellipse(posterior_stats['mean'].flatten(), eigenval, eigenvec, 1)
-	sigma2 = find_ellipse(posterior_stats['mean'].flatten(), eigenval, eigenvec, 2)
-	sigma3 = find_ellipse(posterior_stats['mean'].flatten(), eigenval, eigenvec, 3)
+	sigma1 = find_ellipse_info(info['mean'].flatten(), eigenval, eigenvec, 1)
+	sigma2 = find_ellipse_info(info['mean'].flatten(), eigenval, eigenvec, 2)
+	sigma3 = find_ellipse_info(info['mean'].flatten(), eigenval, eigenvec, 3)
 
-	ellipse1 = Ellipse(xy=sigma1['mean'], width=sigma1['width'], height=sigma1['height'], angle=sigma1['angle'], visible=True, facecolor='none', edgecolor='red', linewidth=2)	
-	ellipse2 = Ellipse(xy=sigma2['mean'], width=sigma2['width'], height=sigma2['height'], angle=sigma2['angle'], visible=True, facecolor='none', edgecolor='red', linewidth=2)	
-	ellipse3 = Ellipse(xy=sigma3['mean'], width=sigma3['width'], height=sigma3['height'], angle=sigma3['angle'], visible=True, facecolor='none', edgecolor='red', linewidth=2)	
+	ellipse1 = Ellipse(xy=sigma1['mean'], width=sigma1['width'], height=sigma1['height'], angle=sigma1['angle'], visible=True, facecolor='none', edgecolor=color, linestyle=line, linewidth=2)	
+	ellipse2 = Ellipse(xy=sigma2['mean'], width=sigma2['width'], height=sigma2['height'], angle=sigma2['angle'], visible=True, facecolor='none', edgecolor=color, linestyle=line, linewidth=2)	
+	ellipse3 = Ellipse(xy=sigma3['mean'], width=sigma3['width'], height=sigma3['height'], angle=sigma3['angle'], visible=True, facecolor='none', edgecolor=color, linestyle=line, linewidth=2)	
 
-	plt.figure()
 	ax = plt.gca()
 	ax.add_patch(ellipse3)
 	ax.add_patch(ellipse2)
 	ax.add_patch(ellipse1)
 	ax.set_xlim(-0.4, 0.4)
 	ax.set_ylim(0.5, 2.0)
-	plt.plot(posterior_stats['mean'][0], posterior_stats['mean'][1], 'rx', markersize=8, mew=2)
-	plt.xlabel(r'$\theta_1$')
-	plt.ylabel(r'$\theta_2$')
-	plt.show()
+	plt.plot(info['mean'][0], info['mean'][1], marker=mean_marker, mfc='none', mec=color, markersize=8, mew=2)
 
 def main():
 	measurement_uncertainty = 0.1
 	posterior_stats = setup(measurement_uncertainty)
 	print('analytical mean:')
 	print(posterior_stats['mean'])
+	print('covar:')
+	print(posterior_stats['covar'])
 
-	analytical_contours(posterior_stats)
-	#mcmc, acceptance_ratio = metropolis_hastings(posterior_stats)
+	plt.figure()
+	contours(posterior_stats, 'red', 'solid', '*')
+	mcmc, acceptance_ratio = metropolis_hastings(posterior_stats)
+	print('numerical mean:')
+	print(mcmc['mean'])
+	print('covar:')
+	print(mcmc['covar'])
+	contours(mcmc, 'blue', 'dashed', 'x')
+	plt.show()
 	#print('mcmc mean:')
 	#print(mcmc['mean'])
 	#print('acceptance ratio:')
