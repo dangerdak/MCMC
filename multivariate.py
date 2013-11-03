@@ -116,7 +116,7 @@ def calculate_hastings_ratio(ln_proposed, ln_current):
 	
 def metropolis_hastings(posterior_stats):
 	"""Sample from posterior distribution using Metropolis-Hastings algorithm."""
-	iterations = 5000
+	iterations = 50000
 	thetas = np.array([[-0.05], [0.5]])
 	proposal_stdev = np.array([[0.1], [0.1]])
 	ln_posterior = calculate_ln_posterior(thetas, posterior_stats)
@@ -218,13 +218,6 @@ def plot_samples(mcmc, res):
 	plt.pcolormesh(x_edges, y_edges, filled_numerical_contours, cmap=plt.cm.binary)
 	plt.show()
 
-	marginalized = marginalize(counts)
-	plt.bar(x_edges[:-1], marginalized['theta_1'], x_edges[1]-x_edges[0], color='white')
-	plt.show()
-
-	plt.bar(y_edges[:-1], marginalized['theta_2'], y_edges[1]-y_edges[0], color='white')
-	plt.show()
-
 	return counts
 	
 def marginalize(counts):
@@ -248,6 +241,7 @@ def plot_marginalized(mcmc, res):
 
 	plt.subplot(gs[1])
 	plt.pcolormesh(x_edges, y_edges, counts, cmap=plt.cm.binary)
+	contours(mcmc, 'blue', 'dashed', 'x')
 	plt.tick_params(axis='both', labelleft='off', labelbottom='off')
 
 	marginalized = marginalize(counts)
@@ -279,54 +273,46 @@ def ellipse_coords(mean, eigenval, eigenvec, level):
 
 	return axis1, axis2
 
-def ellipse_lengths(axis1, axis2):
-	dx1 = axis1[1][0] - axis1[0][0]
-	dy1 = axis1[0][1] - axis1[1][1]
+def ellipse_lengths(a1, a2):
+	dx1 = a1[1][0] - a1[0][0]
+	dy1 = a1[0][1] - a1[1][1]
 	length1 = math.sqrt(dx1**2 + dy1**2)
 
-	dx2 = axis2[1][0] - axis2[0][0]
-	dy2 = axis2[0][1] - axis2[1][1]
+	dx2 = a2[1][0] - a2[0][0]
+	dy2 = a2[0][1] - a2[1][1]
 	length2 = math.sqrt(dx2**2 + dy2**2)
 
-	major = {'length': length1, 'coords': axis1, 'dx': dx1, 'dy': dy1}
-	minor = {'length': length2, 'coords': axis2, 'dx' : dx2, 'dy': dy2}
+	axis1 = {'length': length1, 'coords': a1, 'dx': dx1, 'dy': dy1}
+	axis2 = {'length': length2, 'coords': a2, 'dx' : dx2, 'dy': dy2}
 
-	if length1 > length2:
-		major = {'length': length1, 'coords': axis1, 'dx': dx1, 'dy': dy1}
-		minor = {'length': length2, 'coords': axis2, 'dx' : dx2, 'dy': dy2}
-	else:
-		major = {'length': length2, 'coords': axis2, 'dx': dx2, 'dy': dy2}
-		minor = {'length': length1, 'coords': axis1, 'dx': dx1, 'dy': dy1}
-
-	return major, minor
+	return axis1, axis2
 
 def ellipse_angle(dx, dy):
 	angle = math.atan(dx/dy)
+	angle = angle * 180 / math.pi
 
 	return angle
 
 def find_ellipse_info(mean, eigenval, eigenvec, level):
-	axis1, axis2 = ellipse_coords(mean, eigenval, eigenvec, level)
-	major, minor = ellipse_lengths(axis1, axis2)
+	a1, a2 = ellipse_coords(mean, eigenval, eigenvec, level)
+	axis1, axis2 = ellipse_lengths(a1, a2)
 
-	angle = ellipse_angle(major['dx'], major['dy'])
-	angle = angle * 180 / math.pi
+	axis1['xangle'] = ellipse_angle(axis1['dx'], axis1['dy'])
+	axis2['xangle'] = ellipse_angle(axis2['dx'], axis2['dy'])
 
-	ellipse = {'mean': mean, 'width': minor['length'], 'height': major['length'], 'angle':angle}
-	
-	return ellipse
+	return axis1, axis2
 
 def contours(info, color, line, mean_marker):
 	"""Add contour lines and mean to current axes."""
 	eigenval, eigenvec = np.linalg.eigh(info['covar'])
 
-	sigma1 = find_ellipse_info(info['mean'].flatten(), eigenval, eigenvec, 1)
-	sigma2 = find_ellipse_info(info['mean'].flatten(), eigenval, eigenvec, 2)
-	sigma3 = find_ellipse_info(info['mean'].flatten(), eigenval, eigenvec, 3)
+	axis11, axis12 = find_ellipse_info(info['mean'].flatten(), eigenval, eigenvec, 1)
+	axis21, axis22 = find_ellipse_info(info['mean'].flatten(), eigenval, eigenvec, 2)
+	axis31, axis32 = find_ellipse_info(info['mean'].flatten(), eigenval, eigenvec, 3)
 
-	ellipse1 = Ellipse(xy=sigma1['mean'], width=sigma1['width'], height=sigma1['height'], angle=sigma1['angle'], visible=True, facecolor='none', edgecolor=color, linestyle=line, linewidth=2)	
-	ellipse2 = Ellipse(xy=sigma2['mean'], width=sigma2['width'], height=sigma2['height'], angle=sigma2['angle'], visible=True, facecolor='none', edgecolor=color, linestyle=line, linewidth=2)	
-	ellipse3 = Ellipse(xy=sigma3['mean'], width=sigma3['width'], height=sigma3['height'], angle=sigma3['angle'], visible=True, facecolor='none', edgecolor=color, linestyle=line, linewidth=2)	
+	ellipse1 = Ellipse(xy=info['mean'], width=axis11['length'], height=axis12['length'], angle=axis12['xangle'], visible=True, facecolor='none', edgecolor=color, linestyle=line, linewidth=2)	
+	ellipse2 = Ellipse(xy=info['mean'], width=axis21['length'], height=axis22['length'], angle=axis22['xangle'], visible=True, facecolor='none', edgecolor=color, linestyle=line, linewidth=2)	
+	ellipse3 = Ellipse(xy=info['mean'], width=axis31['length'], height=axis32['length'], angle=axis32['xangle'], visible=True, facecolor='none', edgecolor=color, linestyle=line, linewidth=2)	
 
 	ax = plt.gca()
 	ax.add_patch(ellipse3)
@@ -360,8 +346,8 @@ def main():
 	#print('mcmc sample examples:')
 	#print(mcmc['samples'].shape)
 
-	#plot_samples(mcmc, 200)
-	#plot_marginalized(mcmc, 200)
+	plot_samples(mcmc, 200)
+	plot_marginalized(mcmc, 200)
 
 
 if __name__ == '__main__':
