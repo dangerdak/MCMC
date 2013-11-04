@@ -151,7 +151,7 @@ def metropolis_hastings_rot(posterior_stats, sample_mean, axis1, axis2):
 	"""Sample from posterior distribution using Metropolis-Hastings algorithm."""
 	iterations = 100000
 	theta = np.array([[-0.05], [0.5]])
-	proposal_stdev = np.array([[0.05], [0.05]])
+	proposal_stdev = np.array([[0.3], [0.3]])
 	ln_posterior = calculate_ln_posterior(theta, posterior_stats)
 	accepts = 0
 	mcmc_samples = theta 
@@ -305,24 +305,26 @@ def plot_marginalized(mcmc, res):
 	counts, x_edges, y_edges = np.histogram2d(mcmc['samples'][:,0], mcmc['samples'][:,1], bins=res)
 	counts = np.flipud(np.rot90(counts))
 
-	plt.subplot(gs[1])
-	plt.pcolormesh(x_edges, y_edges, counts, cmap=plt.cm.gray)
+	ax1 = plt.subplot(gs[1])
+	ax1.pcolormesh(x_edges, y_edges, counts, cmap=plt.cm.gray)
+	ax1.set_ylim(min(y_edges), max(y_edges))
+	ax1.set_xlim(min(x_edges), max(x_edges))
 	contours(mcmc, 'blue', 'dashed', 'x')
-	plt.tick_params(axis='both', labelleft='off', labelbottom='off')
+	ax1.tick_params(axis='both', labelleft='off', labelbottom='off')
 
 	marginalized = marginalize(counts)
 
-	plt.subplot(gs[3])
-	plt.bar(x_edges[:-1], marginalized['theta_1'], x_edges[1]-x_edges[0], color='white')
-	plt.tick_params(axis='y', labelleft='off')
-	plt.xlabel(r'$\theta_1$')
-	plt.ylabel(r'P')
+	ax3 = plt.subplot(gs[3], sharex=ax1)
+	ax3.bar(x_edges[:-1], marginalized['theta_1'], x_edges[1]-x_edges[0], color='white')
+	ax3.tick_params(axis='y', labelleft='off')
+	ax3.set_xlabel(r'$\theta_1$')
+	ax3.set_ylabel(r'P')
 
-	plt.subplot(gs[0])
-	plt.barh(y_edges[:-1], marginalized['theta_2'], y_edges[1]-y_edges[0], color='white')
-	plt.tick_params(axis='x', labelbottom='off')
-	plt.ylabel(r'$\theta_2$')
-	plt.xlabel(r'P')
+	ax0 = plt.subplot(gs[0], sharey=ax1)
+	ax0.barh(y_edges[:-1], marginalized['theta_2'], y_edges[1]-y_edges[0], color='white')
+	ax0.tick_params(axis='x', labelbottom='off')
+	ax0.set_ylabel(r'$\theta_2$')
+	ax0.set_xlabel(r'P')
 	plt.show()
 
 def ellipse_coords(mean, eigenval, eigenvec, level):
@@ -388,14 +390,64 @@ def contours(info, color, line, mean_marker):
 	ax.set_xlim(-0.4, 0.4)
 	ax.set_ylim(0.5, 2.0)
 	plt.plot(info['mean'][0], info['mean'][1], marker=mean_marker, mfc='none', mec=color, markersize=8, mew=2)
+	sigma1 = {'ax1':axis11['length'], 'ax2':axis12['length'], 'xangle1':axis11['xangle'], 'xangle2':axis12['xangle']}
+	sigma2= {'ax1':axis21['length'], 'ax2':axis22['length'], 'xangle1':axis21['xangle'], 'xangle2':axis22['xangle']}
+	sigma3 = {'ax1':axis31['length'], 'ax2':axis32['length'], 'xangle1':axis31['xangle'], 'xangle2':axis32['xangle']}
 
+	return sigma1, sigma2, sigma3
+
+def ellipse_boundary(axis, coords, mean):
+	angle = axis['xangle2']
+	minor = axis['ax1']
+	major = axis['ax2']
+	meanx = mean[0]
+	meany = mean[1]
+	x = coords[0]
+	y = coords[1]
+
+	boundary = ((math.cos(angle)*(x - meanx) + math.sin(angle) * (y - meany) )**2 /minor**2) + ((math.sin(angle) * (x - meanx) - math.cos(angle) * (y - meany))**2 /major**2)
+
+	return boundary
+
+
+def check_confidence_regions(sigma1, sigma2, sigma3, samples, mean):
+	"""Count number of points within each confidence region."""
+	sigma1_count = 0
+	sigma2_count = 0
+	sigma3_count = 0
+	# ???
+	for sample in samples[1000:,:]:
+		test1 = ellipse_boundary(sigma1, sample, mean)
+		test2 = ellipse_boundary(sigma2, sample, mean)
+		test3 = ellipse_boundary(sigma3, sample, mean)
+
+		if test1 < 1:
+			sigma1_count += 1
+			sigma2_count += 1
+			sigma3_count += 1
+		elif test2 < 1:
+			sigma2_count += 1
+			sigma3_count += 1
+		elif test3 < 1:
+			sigma3_count += 1
+	
+	region_count = {'1': sigma1_count, '2': sigma2_count, '3': sigma3_count}
+	print('region count')
+	print(region_count)
+	print('sigma1')
+	print(sigma1)
+	print('sigma2')
+	print(sigma2)
+	print('sigma3')
+	print(sigma3)
+	
+	return region_count
+	
 def main():
 	measurement_uncertainty = 0.1
 	posterior_stats = setup(measurement_uncertainty)
 	print('analytical mean:')
 	print(posterior_stats['mean'])
-	print('covar:')
-	print(posterior_stats['covar'])
 
 	plt.figure()
 	contours(posterior_stats, 'red', 'solid', '*')
@@ -405,6 +457,7 @@ def main():
 	eigenval, eigenvec = np.linalg.eigh(mcmc_init['covar'])
 	axis1, axis2 = find_ellipse_info(mcmc_init['mean'].flatten(), eigenval, eigenvec, 2)
 
+	# ??? To plot rotated samples
 	#samples_rot = ellipse_to_circle(mcmc['samples'][0], mcmc['mean'], axis1, axis2)
 	#a = 0
 	#for sample in mcmc['samples'][1:,:]:
@@ -418,12 +471,18 @@ def main():
 	#print(a)
 
 	mcmc, acceptance_ratio = metropolis_hastings_rot(posterior_stats, mcmc_init['mean'], axis1, axis2)
-	contours(mcmc, 'blue', 'dashed', 'x')
+	sigma1, sigma2, sigma3 = contours(mcmc, 'blue', 'dashed', 'x')
 	plt.show()
 	print('mcmc mean:')
 	print(mcmc['mean'])
 	plot_samples(mcmc, 200)
 	plot_marginalized(mcmc, 200)
+	
+	# ??? Give bad values
+	#region_percent = check_confidence_regions(sigma1, sigma2, sigma3, mcmc['samples'], mcmc['mean'])
+	#print('percents:')
+	#print(region_percent)
+	
 
 
 if __name__ == '__main__':
