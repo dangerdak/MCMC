@@ -103,8 +103,8 @@ def calculate_ln_posterior(thetas, posterior_stats):
 def generate_candidates(thetas, proposal_stdev):
 	"""Generate candidate theta values using proposal distribution."""
 	thetas_proposed = np.zeros((2, 1))
-	thetas_proposed[0][0] = random.gauss(thetas[0][0], proposal_stdev[0][0])
-	thetas_proposed[1][0] = random.gauss(thetas[1][0], proposal_stdev[1][0])
+	thetas_proposed[0, 0] = random.gauss(thetas[0][0], proposal_stdev[0][0])
+	thetas_proposed[1, 0] = random.gauss(thetas[1][0], proposal_stdev[1][0])
 	
 	return thetas_proposed
 
@@ -117,65 +117,92 @@ def calculate_hastings_ratio(ln_proposed, ln_current):
 def metropolis_hastings(posterior_stats):
 	"""Sample from posterior distribution using Metropolis-Hastings algorithm."""
 	iterations = 50000
-	thetas = np.array([[-0.05], [0.5]])
+	theta = np.array([[-0.05], [0.5]])
 	proposal_stdev = np.array([[0.1], [0.1]])
-	ln_posterior = calculate_ln_posterior(thetas, posterior_stats)
+	ln_posterior = calculate_ln_posterior(theta, posterior_stats)
 	accepts = 0
-	mcmc_samples = thetas 
+	mcmc_samples = theta 
 
 	for i in range(iterations):
-		thetas_proposed = generate_candidates(thetas, proposal_stdev)
-		ln_posterior_proposed = calculate_ln_posterior(thetas_proposed, posterior_stats)
+		theta_proposed = generate_candidates(theta, proposal_stdev)
+		ln_posterior_proposed = calculate_ln_posterior(theta_proposed, posterior_stats)
 		
 		hastings_ratio = calculate_hastings_ratio(ln_posterior_proposed, ln_posterior)	
 		
 		acceptance_probability = min([1, hastings_ratio])
 
 		if (random.uniform(0,1) < acceptance_probability):
-			#Then accept proposed thetas
-			thetas = thetas_proposed
+			#Then accept proposed theta
+			theta = theta_proposed
 			ln_posterior = ln_posterior_proposed
 			accepts += 1
-		mcmc_samples = np.hstack((mcmc_samples, thetas))
+		mcmc_samples = np.hstack((mcmc_samples, theta))
 
 	mcmc_mean = np.array([ [np.mean(mcmc_samples[0])], [np.mean(mcmc_samples[1])] ])
 	covariance = np.cov(mcmc_samples)
-	mcmc = {'samples': mcmc_samples, 'mean': mcmc_mean, 'covar': covariance} 
+	mcmc = {'samples': mcmc_samples.transpose(), 'mean': mcmc_mean, 'covar': covariance} 
+	acceptance_ratio = accepts / iterations
+
+	return mcmc
+
+def metropolis_hastings_rot(posterior_stats, sample_mean, axis1, axis2):
+	"""Sample from posterior distribution using Metropolis-Hastings algorithm."""
+	iterations = 50000
+	theta = np.array([[-0.05], [0.5]])
+	theta_rot = ellipse_to_circle(theta, sample_mean, axis1, axis2)
+	proposal_stdev = np.array([[0.1], [0.1]])
+	ln_posterior = calculate_ln_posterior(theta, posterior_stats)
+	accepts = 0
+	mcmc_samples = theta 
+
+	for i in range(iterations):
+		theta_proposed_rot = generate_candidates(theta_rot, proposal_stdev)
+		theta_proposed = circle_to_ellipse(theta_proposed_rot, sample_mean, axis1, axis2)
+		ln_posterior_proposed = calculate_ln_posterior(theta_proposed, posterior_stats)
+		
+		hastings_ratio = calculate_hastings_ratio(ln_posterior_proposed, ln_posterior)	
+		
+		acceptance_probability = min([1, hastings_ratio])
+
+		if (random.uniform(0,1) < acceptance_probability):
+			#Then accept proposed theta
+			theta = theta_proposed
+			ln_posterior = ln_posterior_proposed
+			accepts += 1
+		mcmc_samples = np.hstack((mcmc_samples, theta))
+
+	mcmc_mean = np.array([ [np.mean(mcmc_samples[0])], [np.mean(mcmc_samples[1])] ])
+	covariance = np.cov(mcmc_samples)
+	mcmc = {'samples': mcmc_samples.transpose(), 'mean': mcmc_mean, 'covar': covariance} 
 	acceptance_ratio = accepts / iterations
 
 	return mcmc, acceptance_ratio
 
+def transform_matrix(mean, angle, width, height):
+	translate = np.array([ [1, 0, -mean[0]], [0, 1, -mean[1]], [0, 0, 1] ])
+	rotate = np.array([ [math.cos(angle), math.sin(angle), 0], [-math.sin(angle), math.cos(angle), 0], [0, 0, 1] ])
+	scale = np.array([ [1/width, 0, 0], [0, 1/height, 0], [0, 0, 1] ])
+	
+	transform = scale.dot(rotate.dot(translate))
+
+	return transform
+
 def ellipse_to_circle(xy, mean, axis1, axis2):
-	x = xy[0]
-	y = xy[1]
-	angle = axis1['xangle']
-	meanx = mean[0]
-	meany = mean[1]
-	x_rot = ((x - meanx) * math.cos(angle) + (y - meany) * math.sin(angle)) / axis1['length']
-	y_rot = ((x - meanx) * math.sin(angle) - (y - meany) * math.cos(angle)) / axis2['length']
+	transform = transform_matrix(mean, axis2['xangle'], axis1['length'], axis2['length'])
+	xy = np.hstack((xy, 1))
+	xy = xy.reshape((3, 1))
+	xy_rot = transform.dot(xy)
 
-	xy_rot = np.vstack((x_rot, y_rot))
-
-	return xy_rot
+	return xy_rot[:-1,:]
 
 def circle_to_ellipse(xy_rot, mean, axis1, axis2):
-	x_rot = xy_rot[0]
-	y_rot = xy_rot[1]
-	angle = axis1['xangle']
-	meanx = mean[0]
-	meany = mean[1]
-	xlength = axis1['length']
-	ylength = axis2['length']
+	transform = transform_matrix(mean, axis2['xangle'], axis1['length'], axis2['length'])
+	inv_transform = np.linalg.inv(transform)
+	xy_rot = np.hstack((xy_rot, 1))
+	xy_rot = xy_rot.reshape((3,1))
+	xy = inv_transform.dot(xy_rot)
 
-	a = (xlength * x_rot + meanx * math.cos(angle) + meany * math.sin(angle)) / math.sin(angle)
-	b = (ylength * y_rot + meanx * math.sin(angle) - meany * math.cos(angle)) / math.cos(angle)
-
-	x = (a + b) /(math.tan(angle) + (1/math.tan(angle)))
-	y = (a * math.sin(angle) - x * math.cos(angle)) / math.sin(angle)
-
-	xy = np.vstack((x, y))
-
-	return xy
+	return xy[:-1,:]
 
 # Do I uyse this ???
 def edges_to_centers(x_edges, y_edges, res):
@@ -238,7 +265,7 @@ def find_numerical_contours(counts):
 
 def plot_samples(mcmc, res):
 	"""Plot numerical equal-weight samples and filled contours."""
-	counts, x_edges, y_edges = np.histogram2d(mcmc['samples'][0], mcmc['samples'][1], bins=res)
+	counts, x_edges, y_edges = np.histogram2d(mcmc['samples'][:,0], mcmc['samples'][:,1], bins=res)
 	counts = np.flipud(np.rot90(counts))
 	
 	equal_weighted_samples = equal_weight(counts, res)
@@ -268,7 +295,7 @@ def plot_marginalized(mcmc, res):
 	fig.subplots_adjust(hspace=0.001, wspace=0.001)
 	gs = gridspec.GridSpec(2, 2, width_ratios=[1,4], height_ratios=[4,1])
 
-	counts, x_edges, y_edges = np.histogram2d(mcmc['samples'][0], mcmc['samples'][1], bins=res)
+	counts, x_edges, y_edges = np.histogram2d(mcmc['samples'][:,0], mcmc['samples'][:,1], bins=res)
 	counts = np.flipud(np.rot90(counts))
 
 	plt.subplot(gs[1])
@@ -321,7 +348,6 @@ def ellipse_lengths(a1, a2):
 
 def ellipse_angle(dx, dy):
 	angle = math.atan(dx/dy)
-	angle = angle * 180 / math.pi
 
 	return angle
 
@@ -341,10 +367,12 @@ def contours(info, color, line, mean_marker):
 	axis11, axis12 = find_ellipse_info(info['mean'].flatten(), eigenval, eigenvec, 1)
 	axis21, axis22 = find_ellipse_info(info['mean'].flatten(), eigenval, eigenvec, 2)
 	axis31, axis32 = find_ellipse_info(info['mean'].flatten(), eigenval, eigenvec, 3)
+	angle = axis12['xangle']	
+	angle = angle * 180 / math.pi
 
-	ellipse1 = Ellipse(xy=info['mean'], width=axis11['length'], height=axis12['length'], angle=axis12['xangle'], visible=True, facecolor='none', edgecolor=color, linestyle=line, linewidth=2)	
-	ellipse2 = Ellipse(xy=info['mean'], width=axis21['length'], height=axis22['length'], angle=axis22['xangle'], visible=True, facecolor='none', edgecolor=color, linestyle=line, linewidth=2)	
-	ellipse3 = Ellipse(xy=info['mean'], width=axis31['length'], height=axis32['length'], angle=axis32['xangle'], visible=True, facecolor='none', edgecolor=color, linestyle=line, linewidth=2)	
+	ellipse1 = Ellipse(xy=info['mean'], width=axis11['length'], height=axis12['length'], angle=angle, visible=True, facecolor='none', edgecolor=color, linestyle=line, linewidth=2)	
+	ellipse2 = Ellipse(xy=info['mean'], width=axis21['length'], height=axis22['length'], angle=angle, visible=True, facecolor='none', edgecolor=color, linestyle=line, linewidth=2)	
+	ellipse3 = Ellipse(xy=info['mean'], width=axis31['length'], height=axis32['length'], angle=angle, visible=True, facecolor='none', edgecolor=color, linestyle=line, linewidth=2)	
 
 	ax = plt.gca()
 	ax.add_patch(ellipse3)
@@ -364,7 +392,29 @@ def main():
 
 	plt.figure()
 	contours(posterior_stats, 'red', 'solid', '*')
-	mcmc, acceptance_ratio = metropolis_hastings(posterior_stats)
+
+	mcmc_init = metropolis_hastings(posterior_stats)
+
+	eigenval, eigenvec = np.linalg.eigh(mcmc_init['covar'])
+	axis1, axis2 = find_ellipse_info(mcmc_init['mean'].flatten(), eigenval, eigenvec, 2)
+
+	mcmc = metropolis_hastings(posterior_stats)
+	print('sample')
+	print(mcmc['samples'][0])
+	print(mcmc['samples'][0].shape)
+	samples_rot = ellipse_to_circle(mcmc['samples'][0], mcmc['mean'], axis1, axis2)
+	a = 0
+	for sample in mcmc['samples'][1:,:]:
+		sample_rot = ellipse_to_circle(sample, mcmc['mean'], axis1, axis2)
+		a +=1
+		samples_rot = np.hstack((samples_rot, sample_rot))
+	samples_rot = samples_rot.transpose()
+	print('samples rot')
+	print(samples_rot)
+	print('a')
+	print(a)
+
+	#mcmc, acceptance_ratio = metropolis_hastings_rot(posterior_stats, mcmc_init['mean'], axis1, axis2)
 	print('numerical mean:')
 	print(mcmc['mean'])
 	print('covar:')
@@ -377,7 +427,9 @@ def main():
 	#print(acceptance_ratio)
 	#print('mcmc sample examples:')
 	#print(mcmc['samples'].shape)
-
+	mcmc['samples'] = samples_rot
+	print(mcmc['samples'].shape)
+	print(mcmc['samples'].nonzero())
 	plot_samples(mcmc, 200)
 	plot_marginalized(mcmc, 200)
 
