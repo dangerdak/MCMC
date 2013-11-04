@@ -145,6 +145,38 @@ def metropolis_hastings(posterior_stats):
 
 	return mcmc, acceptance_ratio
 
+def ellipse_to_circle(xy, mean, axis1, axis2):
+	x = xy[0]
+	y = xy[1]
+	angle = axis1['xangle']
+	meanx = mean[0]
+	meany = mean[1]
+	x_rot = ((x - meanx) * math.cos(angle) + (y - meany) * math.sin(angle)) / axis1['length']
+	y_rot = ((x - meanx) * math.sin(angle) - (y - meany) * math.cos(angle)) / axis2['length']
+
+	xy_rot = np.vstack((x_rot, y_rot))
+
+	return xy_rot
+
+def circle_to_ellipse(xy_rot, mean, axis1, axis2):
+	x_rot = xy_rot[0]
+	y_rot = xy_rot[1]
+	angle = axis1['xangle']
+	meanx = mean[0]
+	meany = mean[1]
+	xlength = axis1['length']
+	ylength = axis2['length']
+
+	a = (xlength * x_rot + meanx * math.cos(angle) + meany * math.sin(angle)) / math.sin(angle)
+	b = (ylength * y_rot + meanx * math.sin(angle) - meany * math.cos(angle)) / math.cos(angle)
+
+	x = (a + b) /(math.tan(angle) + (1/math.tan(angle)))
+	y = (a * math.sin(angle) - x * math.cos(angle)) / math.sin(angle)
+
+	xy = np.vstack((x, y))
+
+	return xy
+
 # Do I uyse this ???
 def edges_to_centers(x_edges, y_edges, res):
 	"""Given edges and width of bins, find centres."""
@@ -196,9 +228,9 @@ def find_numerical_contours(counts):
 	print('included in 1st sigma region:')
 	print(np.sum(one_sigma * counts) / np.sum(counts))
 	print('included in 2 sigma region:')
-	print(np.sum(one_sigma * counts) + np.sum(two_sigma * counts) / np.sum(counts))
+	print((np.sum(one_sigma * counts) + np.sum(two_sigma * counts)) / np.sum(counts))
 	print('included in 3 sigma region:')
-	print(np.sum(one_sigma * counts) + np.sum(two_sigma * counts) + np.sum(three_sigma * counts) / np.sum(counts))
+	print((np.sum(one_sigma * counts) + np.sum(two_sigma * counts) + np.sum(three_sigma * counts)) / np.sum(counts))
 
 	filled_numerical_contours = one_sigma * 3 + two_sigma * 2 + three_sigma
 
