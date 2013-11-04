@@ -149,7 +149,7 @@ def metropolis_hastings(posterior_stats):
 
 def metropolis_hastings_rot(posterior_stats, sample_mean, axis1, axis2):
 	"""Sample from posterior distribution using Metropolis-Hastings algorithm."""
-	iterations = 100000
+	iterations = 300000
 	theta = np.array([[-0.05], [0.5]])
 	proposal_stdev = np.array([[0.3], [0.3]])
 	ln_posterior = calculate_ln_posterior(theta, posterior_stats)
@@ -306,7 +306,11 @@ def plot_marginalized(mcmc, res):
 	counts = np.flipud(np.rot90(counts))
 
 	ax1 = plt.subplot(gs[1])
-	ax1.pcolormesh(x_edges, y_edges, counts, cmap=plt.cm.gray)
+
+	filled_numerical_contours = find_numerical_contours(counts)
+	ax1.pcolormesh(x_edges, y_edges, filled_numerical_contours, cmap=plt.cm.gray)
+	
+	#ax1.pcolormesh(x_edges, y_edges, counts, cmap=plt.cm.gray)
 	ax1.set_ylim(min(y_edges), max(y_edges))
 	ax1.set_xlim(min(x_edges), max(x_edges))
 	contours(mcmc, 'blue', 'dashed', 'x')
