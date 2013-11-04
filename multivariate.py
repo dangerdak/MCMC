@@ -116,7 +116,7 @@ def calculate_hastings_ratio(ln_proposed, ln_current):
 	
 def metropolis_hastings(posterior_stats):
 	"""Sample from posterior distribution using Metropolis-Hastings algorithm."""
-	iterations = 50000
+	iterations = 10000
 	theta = np.array([[-0.05], [0.5]])
 	proposal_stdev = np.array([[0.1], [0.1]])
 	ln_posterior = calculate_ln_posterior(theta, posterior_stats)
@@ -141,21 +141,23 @@ def metropolis_hastings(posterior_stats):
 	mcmc_mean = np.array([ [np.mean(mcmc_samples[0])], [np.mean(mcmc_samples[1])] ])
 	covariance = np.cov(mcmc_samples)
 	mcmc = {'samples': mcmc_samples.transpose(), 'mean': mcmc_mean, 'covar': covariance} 
+	print('acceptance ratio init')
 	acceptance_ratio = accepts / iterations
+	print(acceptance_ratio)
 
 	return mcmc
 
 def metropolis_hastings_rot(posterior_stats, sample_mean, axis1, axis2):
 	"""Sample from posterior distribution using Metropolis-Hastings algorithm."""
-	iterations = 50000
+	iterations = 100000
 	theta = np.array([[-0.05], [0.5]])
-	theta_rot = ellipse_to_circle(theta, sample_mean, axis1, axis2)
-	proposal_stdev = np.array([[0.1], [0.1]])
+	proposal_stdev = np.array([[0.05], [0.05]])
 	ln_posterior = calculate_ln_posterior(theta, posterior_stats)
 	accepts = 0
 	mcmc_samples = theta 
 
 	for i in range(iterations):
+		theta_rot = ellipse_to_circle(theta, sample_mean, axis1, axis2)
 		theta_proposed_rot = generate_candidates(theta_rot, proposal_stdev)
 		theta_proposed = circle_to_ellipse(theta_proposed_rot, sample_mean, axis1, axis2)
 		ln_posterior_proposed = calculate_ln_posterior(theta_proposed, posterior_stats)
@@ -176,6 +178,11 @@ def metropolis_hastings_rot(posterior_stats, sample_mean, axis1, axis2):
 	mcmc = {'samples': mcmc_samples.transpose(), 'mean': mcmc_mean, 'covar': covariance} 
 	acceptance_ratio = accepts / iterations
 
+	print('acceptance ratio rotated')
+	acceptance_ratio = accepts / iterations
+	print(acceptance_ratio)
+
+
 	return mcmc, acceptance_ratio
 
 def transform_matrix(mean, angle, width, height):
@@ -189,7 +196,7 @@ def transform_matrix(mean, angle, width, height):
 
 def ellipse_to_circle(xy, mean, axis1, axis2):
 	transform = transform_matrix(mean, axis2['xangle'], axis1['length'], axis2['length'])
-	xy = np.hstack((xy, 1))
+	xy = np.vstack((xy, 1))
 	xy = xy.reshape((3, 1))
 	xy_rot = transform.dot(xy)
 
@@ -198,7 +205,7 @@ def ellipse_to_circle(xy, mean, axis1, axis2):
 def circle_to_ellipse(xy_rot, mean, axis1, axis2):
 	transform = transform_matrix(mean, axis2['xangle'], axis1['length'], axis2['length'])
 	inv_transform = np.linalg.inv(transform)
-	xy_rot = np.hstack((xy_rot, 1))
+	xy_rot = np.vstack((xy_rot, 1))
 	xy_rot = xy_rot.reshape((3,1))
 	xy = inv_transform.dot(xy_rot)
 
@@ -299,7 +306,7 @@ def plot_marginalized(mcmc, res):
 	counts = np.flipud(np.rot90(counts))
 
 	plt.subplot(gs[1])
-	plt.pcolormesh(x_edges, y_edges, counts, cmap=plt.cm.binary)
+	plt.pcolormesh(x_edges, y_edges, counts, cmap=plt.cm.gray)
 	contours(mcmc, 'blue', 'dashed', 'x')
 	plt.tick_params(axis='both', labelleft='off', labelbottom='off')
 
@@ -398,38 +405,23 @@ def main():
 	eigenval, eigenvec = np.linalg.eigh(mcmc_init['covar'])
 	axis1, axis2 = find_ellipse_info(mcmc_init['mean'].flatten(), eigenval, eigenvec, 2)
 
-	mcmc = metropolis_hastings(posterior_stats)
-	print('sample')
-	print(mcmc['samples'][0])
-	print(mcmc['samples'][0].shape)
-	samples_rot = ellipse_to_circle(mcmc['samples'][0], mcmc['mean'], axis1, axis2)
-	a = 0
-	for sample in mcmc['samples'][1:,:]:
-		sample_rot = ellipse_to_circle(sample, mcmc['mean'], axis1, axis2)
-		a +=1
-		samples_rot = np.hstack((samples_rot, sample_rot))
-	samples_rot = samples_rot.transpose()
-	print('samples rot')
-	print(samples_rot)
-	print('a')
-	print(a)
+	#samples_rot = ellipse_to_circle(mcmc['samples'][0], mcmc['mean'], axis1, axis2)
+	#a = 0
+	#for sample in mcmc['samples'][1:,:]:
+	#	sample_rot = ellipse_to_circle(sample, mcmc['mean'], axis1, axis2)
+	#	a +=1
+	#	samples_rot = np.hstack((samples_rot, sample_rot))
+	#samples_rot = samples_rot.transpose()
+	#print('samples rot')
+	#print(samples_rot)
+	#print('a')
+	#print(a)
 
-	#mcmc, acceptance_ratio = metropolis_hastings_rot(posterior_stats, mcmc_init['mean'], axis1, axis2)
-	print('numerical mean:')
-	print(mcmc['mean'])
-	print('covar:')
-	print(mcmc['covar'])
+	mcmc, acceptance_ratio = metropolis_hastings_rot(posterior_stats, mcmc_init['mean'], axis1, axis2)
 	contours(mcmc, 'blue', 'dashed', 'x')
 	plt.show()
-	#print('mcmc mean:')
-	#print(mcmc['mean'])
-	#print('acceptance ratio:')
-	#print(acceptance_ratio)
-	#print('mcmc sample examples:')
-	#print(mcmc['samples'].shape)
-	mcmc['samples'] = samples_rot
-	print(mcmc['samples'].shape)
-	print(mcmc['samples'].nonzero())
+	print('mcmc mean:')
+	print(mcmc['mean'])
 	plot_samples(mcmc, 200)
 	plot_marginalized(mcmc, 200)
 
