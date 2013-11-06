@@ -215,9 +215,23 @@ def plot_log_both(thetas, posteriors, thetas_r, thetas_mh, bins):
 	plt.savefig('bothlogs.png')
 	plt.show()
 
+def plot_convergence(posterior_stats, proposal_stdev, start1=0.1, start2=0.5, start3=0.9, iterations=2000):
+	""" Burn-in plot for Metropolis-Hastings method """
+	thetas_mh = {'1':1, '2':1, '3':1}
+	thetas_mh['1'], posteriors_mh, accepts = metropolis_hastings(posterior_stats, start1, proposal_stdev, iterations)
+	thetas_mh['2'], posteriors_mh, accepts = metropolis_hastings(posterior_stats, start2, proposal_stdev, iterations)
+	thetas_mh['3'], posteriors_mh, accepts = metropolis_hastings(posterior_stats, start3, proposal_stdev, iterations)
+	plt.plot(range(iterations), thetas_mh['1'][0:iterations])
+	plt.plot(range(iterations), thetas_mh['2'][0:iterations])
+	plt.plot(range(iterations), thetas_mh['3'][0:iterations])
+
+	plt.xlabel('Iteration', fontsize=16)
+	plt.ylabel(r'$\theta$', fontsize=16)
+	plt.savefig('convergence.png', bbox_inches='tight')
+	plt.show()
+
 def plot_burn_in(iterations, thetas_mh, posteriors_mh):
 	""" Burn-in plot for Metropolis-Hastings method """
-	step = list(range(1, len(thetas_mh)+1))
 	
 	plt.plot(range(20000), thetas_mh[1:20001])
 	plt.xlim(-100)
@@ -253,7 +267,7 @@ def plot_proposal(proposal_stdevs, acceptance_rates, mh_stdevs):
 	# Plot acceptance rate for different standard deviations of the proposal distribution 
 	plt.plot(proposal_stdevs, acceptance_rates, marker='x', linestyle='none')
 	plt.xlabel('Proposal Standard Deviation')
-	plt.ylabel('Acceptance Ratio')
+	plt.ylabel('Acceptance Rate')
 
 	plt.subplot(1, 2, 2)
 	# Plot standard devation of posterior from MH method against that of proposal distribution 
@@ -267,7 +281,7 @@ def plot_proposal(proposal_stdevs, acceptance_rates, mh_stdevs):
 def main():
 
 	# Use command line arguments to determine which parts of code to run
-	modes = ['rejection', 'metropolis_hastings', 'all', 'proposal']
+	modes = ['convergence', 'rejection', 'metropolis_hastings', 'all', 'proposal']
 	parser = ArgumentParser(description='One dimensional MCMC')
 	parser.add_argument('--mode', type=str, default='all', choices=modes, help='Specify which section of the program to run.')
 	args = parser.parse_args()
@@ -287,6 +301,9 @@ def main():
 	# Analytical
 	data_points = 100
 	thetas, posteriors = analytical(posterior_stats, theta_range, data_points)
+
+	if (args.mode == 'convergence') or (args.mode == 'all'):
+		plot_convergence(posterior_stats, 0.01, 0.1, 0.5, 0.7, 1000)
 
 	if (args.mode == 'rejection') or (args.mode == 'all'):
 		# Rejection sampling
