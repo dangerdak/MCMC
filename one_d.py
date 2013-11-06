@@ -88,7 +88,7 @@ def metropolis_hastings(posterior_stats, theta_initial, proposal_stdev, iteratio
 	posteriors_mh = []
 	theta_current = theta_initial
 	posterior_current = calculate_posterior(theta_current, posterior_stats)
-	# For acceptance-ratio plot
+	# For acceptance rate plot
 	accepts = 0
 	for i in range(iterations):
 		theta_proposed = generate_candidate(theta_current, proposal_stdev)
@@ -231,27 +231,27 @@ def plot_burn_in(iterations, thetas_mh, posteriors_mh):
 def proposal_stdev_effects(posterior_stats, theta_initial, iterations, proposal_stdev_min = 0.06, proposal_stdev_max = 0.26, data_points = 20):
 	""" Returns data showing effects of changing the standard deviation of the proposal distribution """
 	mh_stdevs = []
-	acceptance_ratios = []
+	acceptance_rates = []
 	proposal_stdevs = []
 	proposal_stdev_interval = (proposal_stdev_max - proposal_stdev_min) / data_points
 	proposal_stdev = proposal_stdev_min
 	for i in range(data_points):
 		thetas_mh, posteriors_mh, accepts = metropolis_hastings(posterior_stats, theta_initial, proposal_stdev, iterations)
 
-		acceptance_ratios.append(accepts / iterations)
+		acceptance_rates.append(accepts / iterations)
 		proposal_stdevs.append(proposal_stdev)
 		mh_stdevs.append(numpy.std(posteriors_mh)) 
 
 		proposal_stdev = proposal_stdev + proposal_stdev_interval
 
-	return(proposal_stdevs, acceptance_ratios, mh_stdevs)
+	return(proposal_stdevs, acceptance_rates, mh_stdevs)
 	
-def plot_proposal(proposal_stdevs, acceptance_ratios, mh_stdevs):
+def plot_proposal(proposal_stdevs, acceptance_rates, mh_stdevs):
 	""" Plots showing effect of changing te standard deviation of the proposal distribution """
 	plt.figure()
 	plt.subplot(1, 2, 1)
-	# Plot acceptance ratio for different standard deviations of the proposal distribution 
-	plt.plot(proposal_stdevs, acceptance_ratios, marker='x', linestyle='none')
+	# Plot acceptance rate for different standard deviations of the proposal distribution 
+	plt.plot(proposal_stdevs, acceptance_rates, marker='x', linestyle='none')
 	plt.xlabel('Proposal Standard Deviation')
 	plt.ylabel('Acceptance Ratio')
 
@@ -312,8 +312,8 @@ def main():
 
 	if (args.mode == 'proposal'):
 		# Effects of changing the proposal distributions standard deviation
-		proposal_stdevs, acceptance_ratios, mh_stdevs = proposal_stdev_effects(posterior_stats, theta_initial, iterations)
-		plot_proposal(proposal_stdevs, acceptance_ratios, mh_stdevs)
+		proposal_stdevs, acceptance_rates, mh_stdevs = proposal_stdev_effects(posterior_stats, theta_initial, iterations)
+		plot_proposal(proposal_stdevs, acceptance_rates, mh_stdevs)
 
 if __name__ == '__main__':
 	main()
