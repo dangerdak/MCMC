@@ -102,67 +102,18 @@ constant.
 A random number $r$ is generated from some proposal distribution, $Q(\theta)$. A
 corresponding random number is generated from a uniform distribution in the
 range [0,$Q(\theta = r)$], representing a value on the y-axis. Both the
-proposal distribution and the target distribution, $P(\theta|x)$ are
+proposal distribution and the target distribution, $P(\theta|x)$, are
 evaluated at this value. The probability of 'accepting' the sample is given by
 $\frac{P(\theta = r|x)}{Q(\theta = r)}$ - in practice this is implemented by accepting the
 sample if $y < P(\theta = r|x)$, and rejecting otherwise. The accepted points are
 effectively a series of samples from the target distribution. From these
 samples using the maximum-likelihood estimates for mean and variance gives the
 Monte Carlo estimates for said quantities. It is important that $Q(\theta) >
-P(\theta|x) \forall \, \theta$. 
+P(\theta|x) \, \forall \, \theta$. 
 
 \subsection{Markov Chains} 
 \subsection{Metropolis-Hastings Algorithm}
 \subsection{Examples of Applications}
-
-\section{One-Dimensional Target Distribution} 
-The posterior was found
-for a quantity $\theta$, for the case of a Gaussian prior and a Gaussian
-likelihood. With our knowledge of the distribution previously given by
-$p(\theta)$, Bayes theorem gives us a way to update our knowledge given a new
-set of measurements, $x$: 
-\begin{equation}
-	\label{eq:bayes}
-	p(\theta|x) = \frac{p(x|\theta)p(\theta)}{p(x)},
-\end{equation} 
-where $p(\theta|x)$ is the posterior, our updated knowledge, $p(x|\theta)$ is
-the likelihood of the data - the probability of observing those data as a
-function of $\theta$, $p(\theta)$ is the prior distribution, i.e. our knowledge
-before the measurements, and $p(x)$ is a normalizing constant.
-
-Measurements were simulated by generating a set of independent, Gaussian
-distributed variables, $\hat{\mathbf{x}} = \{x_1, x_2, ..., x_N\}$, representing observed
-values for $\theta$. In this case we used that
-\begin{equation}
-	\label{eq:measurements}
-	p(\theta) \sim \mathcal{N}(0.5, 0.1),
-\end{equation}
-in order to generate our results - i.e. that we have a population mean of 0.5,
-and a population variance of 0.1. If the data $\hat{x}$ had come from an actual
-experiment of course we would not know these two values. N values were
-generated, resulting in a sample mean of $\bar{x} = 0.464$, and a sample
-standard deviation of $\sigma = 0.075$.
-The likelihood function for the data $\hat{x}$ is given by:
-
-\begin{equation}
-	\label{eq:rawlikelihood}
-	\mathcal{L}(\theta) = p(\hat{\mathbf{x}}|\bar{x},\sigma) = \prod_{i=1}^{N} \frac{1}{\sqrt{2\pi}\sigma}\exp\left(-\frac{1}{2}\frac{(\theta - \hat{x}_i)^2}{\sigma^2}\right),
-\end{equation}
-
-from which it can be shown that:
-\begin{equation}
-	\label{eq:likelihood}
-	\mathcal{L}(\theta) = L_0\exp\left(-\frac{1}{2}\frac{(\theta - \bar{x})^2}{\sfrac{\sigma^2}{N}}\right),
-\end{equation}
-where $L_0$ is a constant (see \cref{sec:likelihood}).
-
-Assuming the following prior distribution:
-\begin{equation}
-	\label{eq:prior}
-	p(\theta) =  \frac{1}{\sqrt{2\pi}}\exp\left(-\frac{1}{2}\frac{\theta^2}{\Sigma^2}\right),
-\end{equation}
-Bayes theorem can be used to find the posterior distribution.
-
 \subsection{Analytical Solution}
 In this case we have a simple gaussian prior and likelihood, and it can be shown
 that the resulting posterior is also a gaussian (see \cref{sec:posterior}).
@@ -245,11 +196,20 @@ BURN-IN??? - INC MULTIPLE STARTS CONVERGING
 PROPOSAL SIGMA/ACCEPTANCE RATE???
 
 MC SIGMA INDEPENDENT OF PROPOSAL SIGMA
-
 \subsection{Analytical vs Rejection vs MH}
 
 \section{Two-Dimensional Target Distribution} 
 \subsection{Analytical Solution}
+Consider the linear model
+\begin{equation}
+	y = F\theta + \epsilon
+\end{equation}
+where y is a vector containing our data, $\theta$ is a vector of unkown parameters, F is the design matrix and $\epsilon$ is a vector containing the noise. If we assume that the noise is randomly gaussian distributed with zero mean and zero correlation, then the likelihood function can be shown to be:
+\begin{equation}
+	p(y|\theta) = \mathcal{L}_0 \exp\left[-\frac{1}{2}(\theta - \theta_0)^tL(\theta - \theta_0)\right],
+\end{equation}
+where L, the likelihood fisher matrix, is given by
+
 \subsection{Metropolis-Hastings} 
 \subsection{Analytical vs MH}
 
@@ -362,6 +322,81 @@ Substituting back:
 	\\ &= \bar{x},
 \end{align*}
 as the integral of a pdf between infinite limits is equal to one. 
+
+\section{2-D Likelihood in Gaussian Form}
+\label{sec:2dlikelihood}
+
+For the linear model
+\begin{equation*}
+	y = F\theta + \epsilon
+\end{equation*}
+where $\epsilon$ is uncorrelated, the likelihood function is given by
+\begin{equation*}
+	p(y|\theta) = \frac{1}{(2\pi)^{\frac{d}{2}}\Pi_j\tau_j} \exp\left[-\frac{1}{2}(b - A\theta)^t(b-A\theta)\right],
+\end{equation*}
+where $A_{ij} = \sfrac{F_{ij}}{\tau_i}$ and $b_i = \sfrac{y_i}{\tau_i}$.
+
+Taking just the variable part of the exponent,
+\begin{align*}
+	(b - A\theta)^t(b-A\theta) &= (A\theta - b)^t(A\theta - b)
+	\\ &= (\theta - A^{-1}b)^tA^tA(\theta - A^{-1}b)
+	\\ &= (b - AA^{-1}(A^t)^{-1}A^tb)^t(b - AA^{-1}(A^t)^{-1}A^tb) \, + \\ & \qquad (\theta - A^{-1} (A^t)^{-1} A^t b)^t A^t A(\theta - A^{-1} (A^t)^{-1} A^t b)
+	\\ &= (b - A L^{-1} A^t b)^t (b - A L^{-1} A^t b) + (\theta - L^{-1} A^t b)^t L (\theta - L^{-1} A^t b)
+	\\ &= (b - A \theta_0)^t (b - A \theta_0) + (\theta - \theta_0)^t L (\theta - \theta_0).
+\end{align*}
+
+Putting this back into the exponent above we have
+\begin{align*}
+	p(y|\theta) &= \frac{1}{(2\pi)^{\frac{d}{2}}\Pi_j\tau_j} \exp\left[-\frac{1}{2}(b - A \theta_0)^t (b - A \theta_0) -\frac{1}{2}(\theta - \theta_0)^t L (\theta - \theta_0)\right],
+	\\ &= \frac{1}{(2\pi)^{\frac{d}{2}}\Pi_j\tau_j} \exp\left[-\frac{1}{2}(b - A \theta_0)^t (b - A \theta_0)\right] \exp\left[-\frac{1}{2} (\theta - \theta_0)^t L (\theta - \theta_0)\right].
+	\\ &= \mathcal{L}_0 \exp\left[-\frac{1}{2} (\theta - \theta_0)^t L (\theta - \theta_0)\right].
+\end{align*}
+
+Where $\mathcal{L}_0 = \frac{1}{(2\pi)^{\frac{d}{2}}\Pi_j\tau_j} \exp\left[-\frac{1}{2}(b - A \theta_0)^t (b - A \theta_0)\right]$, $\theta_0 = L^{-1} A^t b$ and $L \equiv A^tA$.
+
+\section{2-D Posterior in Gaussian Form}
+If the prior probability distribution function goes as
+\begin{equation*}
+	p(\theta) \propto \exp \left[ -\frac{1}{2} \theta^t P \theta \right],
+\end{equation*}
+where $P$ is the prior Fisher information matrix, and the likelihood function goes as
+\begin{equation*}
+	p(y|\theta) \propto \exp\left[-\frac{1}{2} (\theta - \theta_0)^t L (\theta - \theta_0)\right],
+\end{equation*}
+then according to Bayes theorem the posterior follows
+\begin{align*}
+	p(\theta|y) & \propto p(\theta) p(y|\theta) 
+	\\ & \propto \exp \left[ -\frac{1}{2} \theta^t P \theta \right] \exp\left[-\frac{1}{2} (\theta - \theta_0)^t L (\theta - \theta_0)\right].
+\end{align*}
+
+Combining the exponents and taking the variable part of the result,
+\begin{align*}
+	\theta^t P \theta + (\theta - \theta_0)^t L (\theta - \theta_0) &= \theta^t P \theta + \theta^t L \theta - \theta_0^t L \theta - \theta^t L \theta_0 + \theta_0^t L \theta_0
+	\\ &= \theta^t(L+P) \theta - \theta_0^t L \theta - \theta^t L \theta_0 + \theta_0^t L \theta_0.
+\end{align*}
+Constants can be added and subtracted from the exponent without effecting the proportionality, so we subtract $\theta_0^t L \theta_0$ and add $\theta_0^t L (L+P)^{-1} L \theta_0$:
+\begin{align*}
+	\theta^t(L+P) \theta - & \theta_0^t L \theta - \theta^t L \theta_0 + \theta_0^t L (L+P)^{-1} L \theta_0
+	\\ &= \theta^t(L+P) \theta - \theta_0^t L \theta - \theta^t(L+P)(L+P)^{-1} L \theta_0 + \theta_0^t L (L+P)^{-1} L \theta_0
+	\\ &= (\theta^t(L+P) - \theta_0^t L)(\theta - (L+P)^{-1} L \theta_0)
+	\\ &= (\theta^t - \theta_0^t L (L+P)^{-1})(L+P)(\theta - (L+P)^{-1} L \theta_0)
+\end{align*}
+$P$ and $L$ are both fisher matrices, i.e. inverse covariance matrices. As
+covariance matrices are symmetric, it follows that the inverse of the sum of
+these two matrices is symmetric, and so $(L+P)^{-1} = ((L+P)^{-1})^{t}$. Thus we have
+\begin{align*}
+	(\theta^t - \theta_0^t L^t ((L+ & P)^{-1})^{t}) (L+P) (\theta - (L+P)^{-1} L \theta_0)
+	\\ &= (\theta -(L+P)^{-1} L \theta_0)^{t} (L+P) (\theta - (L+P)^{-1} L \theta_0)
+	\\ &= (\theta - \bar{\theta})^t \mathcal{F} (\theta - \bar{\theta}),
+\end{align*}
+where $\mathcal{F} = L + P$ and $\bar{\theta} = \mathcal{F}^{-1} L \theta_0$.
+This, when put back into the exponent, gives the form of a multivariate
+Gaussian:
+\begin{equation*}
+	p(\theta|y) \propto \exp \left[-\frac{1}{2}(\theta - \bar{\theta})^t \mathcal{F} (\theta - \bar{\theta}),
+\end{equation*}
+with mean $\bar{\theta}$ and Fisher matrix $\mathcal{F}$.
+
 \section{onedcode} 
 \label{sec:onedcode}
 
