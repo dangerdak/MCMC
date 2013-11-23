@@ -62,7 +62,7 @@ def get_posterior_mean(likelihood_fisher, posterior_fisher, mle):
 	return posterior_mean
 
 def setup(measurement_uncertainty):
-	"""Do calculations neccessary to find posterior mean, posterior fisher and covariance matrix"""
+	"""Find posterior mean, posterior fisher and covariance matrix"""
 	data = import_data('dataset.txt', measurement_uncertainty)
 	design = get_design_matrix(data['x'])
 	A = design / measurement_uncertainty
@@ -77,7 +77,7 @@ def setup(measurement_uncertainty):
 
 	posterior_stats = {'fisher': posterior_fisher, 'mean': posterior_mean, 'covar': covariance}
 
-	return posterior_stats
+	return data, posterior_stats
 
 def analytical(posterior_stats):
 	domain_1 = 0.8
@@ -446,10 +446,37 @@ def check_confidence_regions(sigma1, sigma2, sigma3, samples, mean):
 	print(sigma3)
 	
 	return region_count
+
+
+def plot_data(data, posterior_stats):
+	"""Plot simulated data and analytical result"""
+	fig, ax = plt.subplots()
+	#Plot data
+	err = [0.1 for y in data['y']]
+	plt.errorbar(data['x'].flatten(), data['y'].flatten(), yerr=err, marker='x', ls='none')
+
+	# Plot model
+	x = np.arange(min(data['x']), (max(data['x']) + (max(data['x'] - min(data['x']))/10)), (max(data['x'] - min(data['x']))/10) )
+	ax.plot(x, x*posterior_stats['mean'][1] + posterior_stats['mean'][0])
+	plt.xlabel('$x$', fontsize=16)
+	plt.ylabel('$y$', fontsize=16)
+
+	# Display theta values
+	theta_1 = posterior_stats['mean'][0][0]
+	theta_2 = posterior_stats['mean'][1][0]
+	print(posterior_stats['mean'])
+	display_string = (r'$y = \theta_1 + \theta_2 x$' '\n' r'$\theta_1 = {0:.3f}$, $\theta_2 = {1:.3f}$').format(theta_1, theta_2)
+	text_x = 0.5
+	text_y = 0.8
+	plt.text(text_x, text_y, display_string, transform=ax.transAxes, fontsize=16)
+
+	plt.savefig('2ddata.png')
+	plt.show()
 	
 def main():
 	measurement_uncertainty = 0.1
-	posterior_stats = setup(measurement_uncertainty)
+	data, posterior_stats = setup(measurement_uncertainty)
+	plot_data(data, posterior_stats)
 	print('analytical mean:')
 	print(posterior_stats['mean'])
 
@@ -490,4 +517,5 @@ def main():
 
 
 if __name__ == '__main__':
+
 	main()
