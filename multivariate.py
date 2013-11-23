@@ -149,12 +149,13 @@ def metropolis_hastings(posterior_stats):
 
 def metropolis_hastings_rot(posterior_stats, sample_mean, axis1, axis2):
 	"""Sample from posterior distribution using Metropolis-Hastings algorithm."""
-	iterations = 300000
+	iterations = 30000
 	theta = np.array([[-0.05], [0.5]])
-	proposal_stdev = np.array([[0.3], [0.3]])
+	proposal_stdev = np.array([[0.35], [0.35]])
 	ln_posterior = calculate_ln_posterior(theta, posterior_stats)
 	accepts = 0
 	mcmc_samples = theta 
+	samples_rot = ellipse_to_circle(theta, sample_mean, axis1, axis2)
 
 	for i in range(iterations):
 		theta_rot = ellipse_to_circle(theta, sample_mean, axis1, axis2)
@@ -169,21 +170,23 @@ def metropolis_hastings_rot(posterior_stats, sample_mean, axis1, axis2):
 		if (random.uniform(0,1) < acceptance_probability):
 			#Then accept proposed theta
 			theta = theta_proposed
+			theta_rot = theta_proposed_rot
 			ln_posterior = ln_posterior_proposed
 			accepts += 1
 		mcmc_samples = np.hstack((mcmc_samples, theta))
+		samples_rot = np.hstack((samples_rot, theta_rot))
 
 	mcmc_mean = np.array([ [np.mean(mcmc_samples[0])], [np.mean(mcmc_samples[1])] ])
 	covariance = np.cov(mcmc_samples)
 	mcmc = {'samples': mcmc_samples.transpose(), 'mean': mcmc_mean, 'covar': covariance} 
-	acceptance_ratio = accepts / iterations
+	mcmc_rot = samples_rot.transpose()
 
 	print('acceptance ratio rotated')
 	acceptance_ratio = accepts / iterations
 	print(acceptance_ratio)
 
 
-	return mcmc, acceptance_ratio
+	return mcmc, mcmc_rot, acceptance_ratio
 
 def transform_matrix(mean, angle, width, height):
 	translate = np.array([ [1, 0, -mean[0]], [0, 1, -mean[1]], [0, 0, 1] ])
@@ -472,7 +475,35 @@ def plot_data(data, posterior_stats):
 
 	plt.savefig('2ddata.png')
 	plt.show()
-	
+
+def plot_rotation(mcmc_rot, mcmc):
+	mcmc_unrot = mcmc['samples']
+	# Plot rotated
+	fig = plt.figure()
+	ax = fig.add_subplot(111)
+	ax.plot(mcmc_rot[:,0], mcmc_rot[:,1], '.', c='grey')
+	ax.plot(np.mean(mcmc_rot[:,0]), np.mean(mcmc_rot[:,1]), '.k')
+	ax.set_xlim(-1.0, 1.0)
+	ax.set_ylim(-1.0, 1.0)
+	ax.set_xlabel(r'$\theta_{1}$'', ''$rotated$', fontsize=28)
+	ax.set_ylabel(r'$\theta_{2}$'', ''$rotated$', fontsize=28)
+	ax.tick_params(axis='both', which='major', labelsize=20)
+	fig.savefig('rot.png')
+	fig.show()
+
+	# Plot unrotated for comparison
+	fig = plt.figure()
+	ax = fig.add_subplot(111)
+	ax.plot(mcmc_unrot[:,0], mcmc_unrot[:,1], '.', c='grey')
+	ax.plot(np.mean(mcmc_unrot[:,0]), np.mean(mcmc_unrot[:,1]), '.k')
+	ax.set_xlabel(r'$\theta_{1}$', fontsize=28)
+	ax.set_ylabel(r'$\theta_{2}$', fontsize=28)
+	ax.set_xlim(-0.4, 0.4)
+	ax.set_ylim(0.8, 2.0)
+	ax.tick_params(axis='both', which='major', labelsize=20)
+	fig.savefig('unrot.png')
+	fig.show()
+
 def main():
 	measurement_uncertainty = 0.1
 	data, posterior_stats = setup(measurement_uncertainty)
@@ -501,7 +532,9 @@ def main():
 	#print('a')
 	#print(a)
 
-	mcmc, acceptance_ratio = metropolis_hastings_rot(posterior_stats, mcmc_init['mean'], axis1, axis2)
+	mcmc, mcmc_rot, acceptance_ratio = metropolis_hastings_rot(posterior_stats, mcmc_init['mean'], axis1, axis2)
+	plt.show()
+	plot_rotation(mcmc_rot, mcmc)
 	sigma1, sigma2, sigma3 = contours(mcmc, 'blue', 'dashed', 'x')
 	plt.show()
 	print('mcmc mean:')
@@ -517,5 +550,4 @@ def main():
 
 
 if __name__ == '__main__':
-
 	main()
