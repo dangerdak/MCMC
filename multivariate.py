@@ -178,13 +178,12 @@ def metropolis_hastings_rot(posterior_stats, sample_mean, axis1, axis2):
 
 	mcmc_mean = np.array([ [np.mean(mcmc_samples[0])], [np.mean(mcmc_samples[1])] ])
 	covariance = np.cov(mcmc_samples)
-	mcmc = {'samples': mcmc_samples.transpose(), 'mean': mcmc_mean, 'covar': covariance} 
+	mcmc = {'samples': mcmc_samples.transpose(), 'mean': mcmc_mean, 'covar': covariance, 'proposal_stdev': proposal_stdev} 
 	mcmc_rot = samples_rot.transpose()
 
 	print('acceptance ratio rotated')
 	acceptance_ratio = accepts / iterations
 	print(acceptance_ratio)
-
 
 	return mcmc, mcmc_rot, acceptance_ratio
 
@@ -481,13 +480,17 @@ def plot_rotation(mcmc_rot, mcmc):
 	# Plot rotated
 	fig = plt.figure()
 	ax = fig.add_subplot(111)
-	ax.plot(mcmc_rot[:,0], mcmc_rot[:,1], '.', c='grey')
-	ax.plot(np.mean(mcmc_rot[:,0]), np.mean(mcmc_rot[:,1]), '.k')
+	ax.plot(mcmc_rot[:,0], mcmc_rot[:,1], '.', c='grey', zorder=-10)
+	# Plot mean
+	y_stdev = mcmc['proposal_stdev'][0]
+	ax.errorbar(np.mean(mcmc_rot[:,0]), np.mean(mcmc_rot[:,1]), yerr=y_stdev, ms='.', c='k')
+	# Label axes
 	ax.set_xlim(-1.0, 1.0)
 	ax.set_ylim(-1.0, 1.0)
 	ax.set_xlabel(r'$\theta_{1}$'', ''$rotated$', fontsize=28)
 	ax.set_ylabel(r'$\theta_{2}$'', ''$rotated$', fontsize=28)
 	ax.tick_params(axis='both', which='major', labelsize=20)
+
 	fig.savefig('rot.png')
 	fig.show()
 
@@ -495,12 +498,15 @@ def plot_rotation(mcmc_rot, mcmc):
 	fig = plt.figure()
 	ax = fig.add_subplot(111)
 	ax.plot(mcmc_unrot[:,0], mcmc_unrot[:,1], '.', c='grey')
+	# Plot mean
 	ax.plot(np.mean(mcmc_unrot[:,0]), np.mean(mcmc_unrot[:,1]), '.k')
+	# Label axes
 	ax.set_xlabel(r'$\theta_{1}$', fontsize=28)
 	ax.set_ylabel(r'$\theta_{2}$', fontsize=28)
 	ax.set_xlim(-0.4, 0.4)
 	ax.set_ylim(0.8, 2.0)
 	ax.tick_params(axis='both', which='major', labelsize=20)
+
 	fig.savefig('unrot.png')
 	fig.show()
 
