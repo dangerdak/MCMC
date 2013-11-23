@@ -150,7 +150,7 @@ problem.
 		\centering
 		\includegraphics[width=\textwidth]{recentlog.png}
 		\caption{A log-plot makes it easier to see the discrepencies at
-			the extremeties of the plot. These are due to the finite
+			the extremities of the plot. These are due to the finite
 		domain over which samples are taken using this method.}
 		\label{fig:rejlog}
 	\end{subfigure}
@@ -204,13 +204,92 @@ Consider the linear model
 \begin{equation}
 	y = F\theta + \epsilon
 \end{equation}
-where y is a vector containing our data, $\theta$ is a vector of unkown parameters, F is the design matrix and $\epsilon$ is a vector containing the noise. If we assume that the noise is randomly gaussian distributed with zero mean and zero correlation, then the likelihood function can be shown to be:
+where y is a vector containing our data, $\theta$ is a vector of unkown
+parameters, F is the design matrix and $\epsilon$ is a vector containing the
+noise. If we assume that the noise is randomly gaussian distributed with zero
+mean and zero correlation, then the likelihood function can be shown to take the form
 \begin{equation}
 	p(y|\theta) = \mathcal{L}_0 \exp\left[-\frac{1}{2}(\theta - \theta_0)^tL(\theta - \theta_0)\right],
 \end{equation}
-where L, the likelihood fisher matrix, is given by
+where $L$ is the likelihood fisher matrix, and $\mathcal{L}_1$ is a constant (see \cref{sec:2dlikelihood}).
+
+??? what's theta_0?
+
+If we then also say we have a Gaussian prior with zero mean and Fisher matrix $P$, i.e.
+\begin{equation}
+	p(\theta) = \frac{|P|^{\sfrac{1}{2}}}{(2\pi)^{\sfrac{n}{2}}} \exp \left[ \frac{1}{2} \theta^t P \theta \right],
+\end{equation}
+
+then using Bayes theorem the posterior can be shown to follow
+\begin{equation}
+	p(\theta|y) \propto \exp \left[ -\frac{1}{2} (\theta - \bar{\theta})^t \mathcal{F} (\theta - \bar{\theta}) \right],
+\end{equation}
+where $\mathcal{F} = L + P$ and $\bar{\theta} = \mathcal{F}^{-1}L\theta_0$ (see \cref{sec:2dposterior}).
+From this it is clear that $\bar{\theta}$ is the posterior mean and
+$\mathcal{F}$ is the posterior Fisher matrix, but only because both the prior
+and the likelihood had the same (Gaussian) form - resulting in a Gaussian
+posterior.
+
+While these results apply to the multivariate case in general, here we
+specialize to the bivariate case. Specifically we take a prior with Fisher matrix
+	$ P = \begin{bmatrix}
+		10^{-2} & 0 \\
+		0 & 10^{-2}
+	\end{bmatrix}, $
+and a set of simulated data points with noise (see \cref{sec:2ddata}).
+From this we find that the posterior mean, 
+	$\bar{\theta} = \begin{bmatrix} 
+		\theta_1 \\ 
+		\theta_2 \end{bmatrix} = \begin{bmatrix} 
+		-0.012 \\ 
+	1.329 \end{bmatrix}$.
+
+\begin{figure}[htb]
+	\centering
+	\includegraphics[width=0.8\textwidth]{2ddata.png}
+	\caption{In blue are the simulated data with their associated
+	error bars. The green line is the linear model $y = \theta_1 + \theta_2
+	x$ with the parameters $\theta_1$ and $\theta_2$ found analytically.}
+	\label{fig:model}
+\end{figure}
 
 \subsection{Metropolis-Hastings} 
+The Metropolis-Hastings algorithm was then applied to this bivariate posterior
+distribution. The program includes a preliminary run - this is done in order
+to find a rough outline of the posterior distribution. From this the
+orientation of the elliptical distribution can be found, which is used in order
+to transform the distribution to a unit circle. Samples are taken from this
+using Metropolis-Hastings, and then transformed back to the original
+distribution. This makes the choice of proposal distribution simpler and the
+algorithm more efficient - it is easiest to choose the proposal distribution
+such that the standard deviation is specified in the x and y directions.
+However if the ellipse of our desired distribution is not aligned with the axes
+then this will reduce the efficiency of the mixing. Transforming the ellipse
+not only aligns it to the axes (and thus to the proposal distribution) but also
+means we can use the same proposal standard devation in along each axis.
+\begin{figure}[ht]
+	\centering
+	\begin{subfigure}[t]{0.4\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{rot.png}
+		\caption{Metropolis-Hastings samples as they appear when
+		transformed. The proposal distribution standard devation used
+		is shown in black.}
+		\label{fig:rot}
+	\end{subfigure}
+	~
+	\begin{subfigure}[t]{0.4\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{unrot.png}
+		\caption{Metropolis-Hastings samples transformed back to
+		an ellipse. The transformed proposal standard deviation is shown
+		in black, and an example of the sort of standard deviation which would
+		have been used if the ellipse hadn't been rotated is shown in dashed red. ??? }
+		\label{fig:rejlog}
+	\end{subfigure}
+\end{figure}
+
+
 \subsection{Analytical vs MH}
 
 \section{Conclusion}
@@ -355,6 +434,8 @@ Putting this back into the exponent above we have
 Where $\mathcal{L}_0 = \frac{1}{(2\pi)^{\frac{d}{2}}\Pi_j\tau_j} \exp\left[-\frac{1}{2}(b - A \theta_0)^t (b - A \theta_0)\right]$, $\theta_0 = L^{-1} A^t b$ and $L \equiv A^tA$.
 
 \section{2-D Posterior in Gaussian Form}
+\label{sec:2dposterior}
+
 If the prior probability distribution function goes as
 \begin{equation*}
 	p(\theta) \propto \exp \left[ -\frac{1}{2} \theta^t P \theta \right],
@@ -393,9 +474,32 @@ where $\mathcal{F} = L + P$ and $\bar{\theta} = \mathcal{F}^{-1} L \theta_0$.
 This, when put back into the exponent, gives the form of a multivariate
 Gaussian:
 \begin{equation*}
-	p(\theta|y) \propto \exp \left[-\frac{1}{2}(\theta - \bar{\theta})^t \mathcal{F} (\theta - \bar{\theta}),
+	p(\theta|y) \propto \exp \left[-\frac{1}{2}(\theta - \bar{\theta})^t \mathcal{F} (\theta - \bar{\theta})\right],
 \end{equation*}
 with mean $\bar{\theta}$ and Fisher matrix $\mathcal{F}$.
+
+\section{Data}
+\label{sec:2ddata}
+
+\begin{tabular}{|c|c|}
+	\hline
+	x & y \\ 
+	\hline 
+	0.8308 & 0.9160 \\
+	0.5853 & 0.7958 \\
+	0.5497 & 0.8219 \\
+	0.9172 & 1.3757 \\
+	0.2858 & 0.4191 \\
+	0.7572 & 0.9759 \\
+	0.7537 & 0.9455 \\
+	0.3804 & 0.3871 \\
+	0.5678 & 0.7239 \\
+	0.0759 & 0.0964 \\
+	\hline
+\end{tabular}
+
+	
+
 
 \section{onedcode} 
 \label{sec:onedcode}
