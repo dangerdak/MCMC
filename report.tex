@@ -213,7 +213,7 @@ mean and zero correlation, then the likelihood function can be shown to take the
 \end{equation}
 where $L$ is the likelihood fisher matrix, and $\mathcal{L}_1$ is a constant (see \cref{sec:2dlikelihood}).
 
-??? what's theta_0?
+what's theta0? ???
 
 If we then also say we have a Gaussian prior with zero mean and Fisher matrix $P$, i.e.
 \begin{equation}
@@ -269,27 +269,56 @@ not only aligns it to the axes (and thus to the proposal distribution) but also
 means we can use the same proposal standard devation in along each axis.
 \begin{figure}[ht]
 	\centering
-	\begin{subfigure}[t]{0.4\textwidth}
+	\begin{subfigure}[t]{0.4\linewidth}
 		\centering
 		\includegraphics[width=\textwidth]{rot.png}
 		\caption{Metropolis-Hastings samples as they appear when
-		transformed. The proposal distribution standard devation used
-		is shown in black.}
+		transformed. The proposal distribution standard deviation used
+		to generate them is shown in black.}
 		\label{fig:rot}
 	\end{subfigure}
 	~
-	\begin{subfigure}[t]{0.4\textwidth}
+	\begin{subfigure}[t]{0.4\linewidth}
 		\centering
 		\includegraphics[width=\textwidth]{unrot.png}
 		\caption{Metropolis-Hastings samples transformed back to
 		an ellipse. The transformed proposal standard deviation is shown
 		in black, and an example of the sort of standard deviation which would
 		have been used if the ellipse hadn't been rotated is shown in dashed red. ??? }
-		\label{fig:rejlog}
+		\label{fig:unrot}
 	\end{subfigure}
+\end{figure}
+The standard deviation was chosen such the the acceptance rate $a \approx 0.35$
+as according to Gelman et. al this is the optimal value for a
+normal target distribution in two dimensions \cite{acceptance}.
+The results are shown below in \cref{fig:equalweight}, as equal weighted
+samples, and \cref{fig:marginalized} with confidence regions indicating those
+regions containing 67\%, 95\% and 99\% of the samples.
+
+\begin{figure}[htb]
+	\centering
+	\includegraphics[width=0.8\textwidth]{equalweight.png}
+	\caption{Equal weight samples allow us to visualize the density even in the most dense regions.}
+	\label{fig:equalweight}
 \end{figure}
 
 
+\begin{figure}[htb]
+	\centering
+	\includegraphics[width=\textwidth]{marginalized.png}
+	\caption{On the top right is a plot of Metropolis-Hastings samples, shaded to
+	represent $1-$, $2-$ and $3-\sigma$ confidence regions as approximated
+	numerically. This is overlaid with the analytically calculated confidence
+	regions outlined in blue. Alongside are the one-dimensional marginalized posterior
+	distributions for each parameter.}
+	\label{fig:marginalized}
+\end{figure}
+\cref{fig:marginalized} also shows the analytically calculated confidence
+regions, as well as marginalized distributions for each parameter.
+
+Another benefit of using a preliminary run is that the resulting mean can be used
+as the initial $\theta$ in the main run. This may reduce mixing time, and
+remove the need for a burn-in\cite{handbook}.
 \subsection{Analytical vs MH}
 
 \section{Conclusion}
@@ -513,25 +542,36 @@ with mean $\bar{\theta}$ and Fisher matrix $\mathcal{F}$.
 
 	\bibitem{metropolis}
 		Metropolis et al. (1953) Equation of State Calculations by Fast
-		Computing Machines. The Journal of Chemical Physics.
+		Computing Machines. \textit{The Journal of Chemical Physics}.
 		[Online] 21 (6), 1087-1092. Available from: doi:
 		10.1063/1.1699114 [Accessed 21 October 2013].
 
 	\bibitem{applications}
 		Diaconis, P., 2009. The Markov Chain Monte Carlo Revolution.
-		Bull. Amer. Math. Soc., Vol. 46, pp. 179-205
+		\textit{Bull. Amer. Math. Soc.}, Vol. 46, pp. 179-205
 
-	\bibitem{handbookch1}
-		Geyer, C., J., 2011. Handbook of Markov Chain Monte Carlo.
-		Chapman \& Hall/CRC, p.3
-		
 	\bibitem{halton}
 		Halton, J., H., 1970. A Retrospective and Prospective Survey of
-		the Monte Method. SIAM Rev., Vol. 12, No. 1, pp. 1-63
+		the Monte Method. \textit{SIAM Rev.}, Vol. 12, No. 1, pp. 1-63
 	
 	\bibitem{som}
 		Trotta, R., 2012. Statistics of Measurement: Summary Handout.
-		Imperial College London, p. 14
+		London, Imperial College London, p. 14
+	
+	\bibitem{acceptance}
+		Gelman, A., Roberts, G. O., Gilks, W. R., (1996) Efficient
+		Metropolis Jumping Rules. \textit{Bayesian Statistics 5}. [Online]
+		Oxford University Press. Available from:
+		http://www.stat.columbia.edu/~gelman/research/published/baystat5.pdf
+		[Accessed 24 November 2013]
+
+	\bibitem{handbook}
+		C. J. Geyer (2011) Introduction to Markov Chain Monte Carlo.
+		In: Brooks, S., Gelman, A., Jones, G., Meng, X. (eds.)
+		\textit{Handbook of Markov Chain Monte Carlo}. Chapman and
+		Hall/CRC Handbooks of Modern Statistical Methods. Florida,
+		Chapman and Hall/CRC, pp. 3-47.
+	
 
 \end{thebibliography}
 
