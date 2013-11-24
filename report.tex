@@ -148,7 +148,7 @@ problem.
 	~
 	\begin{subfigure}[t]{0.4\textwidth}
 		\centering
-		\includegraphics[width=\textwidth]{recentlog.png}
+		\includegraphics[width=\textwidth]{rejlog.png}
 		\caption{A log-plot makes it easier to see the discrepencies at
 			the extremities of the plot. These are due to the finite
 		domain over which samples are taken using this method.}
@@ -183,16 +183,39 @@ The Metropolis-Hastings algorithm was then applied to the same problem.
 	~
 	\begin{subfigure}[t]{0.4\textwidth}
 		\centering
-		\includegraphics[width=\textwidth]{recentlog.png}
+		\includegraphics[width=\textwidth]{mhlog.png}
 		\caption{A log-plot of the Metropolis-Hastings results shows
 		that the sample is more consistent with the analytical solution,
 	as compared with \cref{fig:rejlog}.}
 		\label{fig:mhlog}
 	\end{subfigure}
+	\label{mhplots}
 \end{figure}
 
 BURN-IN??? - INC MULTIPLE STARTS CONVERGING
-
+It can be seen from \cref{fig:mhplots} that there are some samples which are clear
+outliers from the distribution. This is due to a poor starting value for the
+chain. Starting far from the high-probability parts of the distribution results
+in a disproportionate number of extreme values being accepted in the early
+iterations. These early samples are sometimes discarded as burn-in. There is
+some debate over how best to determine the length of the burn-in period, and
+indeed whether a burn-in should be used at all. reference ??? One approach
+which may be used is running multiple chains from widely varied starting
+positions. When these chains meet, one would expect the chains to have
+converged to the target distribution and so all previous points can be
+discarded. 
+\begin{figure}[htb]
+	\centering
+	\includegraphics[width=0.8\textwidth]{convergence.png}
+	\caption{Starting the chain from three very different states gives us
+	an idea of how the chain converges.}
+	\label{fig:convergence}
+\end{figure}
+While this approach provides some evidence that the chains are converging
+regardless of starting position, it should not be regarded as definitive as not
+all starting positions can be tested. For some multi-peak distributions it is
+conceivable that multiple chains with very different initial states may become
+stuck in the same area for some time.
 PROPOSAL SIGMA/ACCEPTANCE RATE???
 
 MC SIGMA INDEPENDENT OF PROPOSAL SIGMA
@@ -557,6 +580,11 @@ with mean $\bar{\theta}$ and Fisher matrix $\mathcal{F}$.
 	\bibitem{som}
 		Trotta, R., 2012. Statistics of Measurement: Summary Handout.
 		London, Imperial College London, p. 14
+
+	\bibitem{inpractice}
+		Gilks, W. R., Richardson, S., Spiegelhalter, D., J. (1996)
+		\textit{Markov Chain Monte Carlo in Practice}. London, Chapman
+		and Hall.
 	
 	\bibitem{acceptance}
 		Gelman, A., Roberts, G. O., Gilks, W. R., (1996) Efficient
