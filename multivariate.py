@@ -5,6 +5,7 @@ import matplotlib.gridspec as gridspec
 import math
 from matplotlib.patches import Ellipse
 
+
 def import_data(textfile, uncertainty):
 	"""Import measurements from file. Each x and y pair on its own line, delimited by ', '
 	i.e. 'x, y\n'. Also specify uncertainty for measurements."""
@@ -116,7 +117,7 @@ def calculate_hastings_ratio(ln_proposed, ln_current):
 	
 def metropolis_hastings(posterior_stats):
 	"""Sample from posterior distribution using Metropolis-Hastings algorithm."""
-	iterations = 10000
+	iterations = 5000
 	theta = np.array([[-0.05], [0.5]])
 	proposal_stdev = np.array([[0.1], [0.1]])
 	ln_posterior = calculate_ln_posterior(theta, posterior_stats)
@@ -149,8 +150,8 @@ def metropolis_hastings(posterior_stats):
 
 def metropolis_hastings_rot(posterior_stats, sample_mean, axis1, axis2):
 	"""Sample from posterior distribution using Metropolis-Hastings algorithm."""
-	iterations = 30000
-	theta = np.array([[-0.05], [0.5]])
+	iterations = 5000
+	theta = sample_mean
 	proposal_stdev = np.array([[0.35], [0.35]])
 	ln_posterior = calculate_ln_posterior(theta, posterior_stats)
 	accepts = 0
@@ -273,20 +274,28 @@ def find_numerical_contours(counts):
 	return filled_numerical_contours
 
 def plot_samples(mcmc, res):
-	"""Plot numerical equal-weight samples and filled contours."""
+	"""Plot equal-weight samples."""
+	fig = plt.figure()
+	ax = fig.add_subplot(111)
+	
 	counts, x_edges, y_edges = np.histogram2d(mcmc['samples'][:,0], mcmc['samples'][:,1], bins=res)
 	counts = np.flipud(np.rot90(counts))
-	
 	equal_weighted_samples = equal_weight(counts, res)
 	
-	plt.pcolormesh(x_edges, y_edges, equal_weighted_samples, cmap=plt.cm.gray)
-	plt.show()
+	ax.pcolormesh(x_edges, y_edges, equal_weighted_samples, cmap=plt.cm.gray)
 
-	filled_numerical_contours = find_numerical_contours(counts)
-	plt.pcolormesh(x_edges, y_edges, filled_numerical_contours, cmap=plt.cm.binary)
-	plt.show()
+	# Labels
+	ax.set_xlabel(r'$\theta_1$', fontsize=16)
+	ax.set_ylabel(r'$\theta_2$', fontsize=16)
+	ax.tick_params(axis='both', which='major', labelsize=14)
+	fig.subplots_adjust(bottom=0.15)
 
-	return counts
+	fig.savefig('equalweight.png')
+	fig.show()
+
+	#filled_numerical_contours = find_numerical_contours(counts)
+	#ax.pcolormesh(x_edges, y_edges, filled_numerical_contours, cmap=plt.cm.binary)
+	#fig.show()
 	
 def marginalize(counts):
 	"""Find marginalized distribution for each parameter."""
@@ -322,15 +331,22 @@ def plot_marginalized(mcmc, res):
 
 	ax3 = plt.subplot(gs[3], sharex=ax1)
 	ax3.bar(x_edges[:-1], marginalized['theta_1'], x_edges[1]-x_edges[0], color='white')
-	ax3.tick_params(axis='y', labelleft='off')
-	ax3.set_xlabel(r'$\theta_1$')
-	ax3.set_ylabel(r'P')
+	ax3.tick_params(axis='both', labelsize=10)
+	ax3.tick_params(axis='y', labelleft='off', labelsize=10)
+	ax3.set_xlabel(r'$\theta_1$', fontsize=14)
+	ax3.set_ylabel(r'P', fontsize=14)
+	ax3.set_xlim(min(x_edges), max(x_edges))
+	
 
 	ax0 = plt.subplot(gs[0], sharey=ax1)
 	ax0.barh(y_edges[:-1], marginalized['theta_2'], y_edges[1]-y_edges[0], color='white')
+	ax0.tick_params(axis='both', labelsize=10)
 	ax0.tick_params(axis='x', labelbottom='off')
-	ax0.set_ylabel(r'$\theta_2$')
-	ax0.set_xlabel(r'P')
+	ax0.set_ylabel(r'$\theta_2$', fontsize=14)
+	ax0.set_xlabel(r'P', fontsize=14)
+	ax0.set_ylim(min(y_edges), max(y_edges))
+
+	fig.savefig('marginalized.png')
 	plt.show()
 
 def ellipse_coords(mean, eigenval, eigenvec, level):
@@ -475,21 +491,32 @@ def plot_data(data, posterior_stats):
 	plt.savefig('2ddata.png')
 	plt.show()
 
-def plot_rotation(mcmc_rot, mcmc):
+def plot_rotation(mcmc_rot, mcmc, sample_mean, axis1, axis2):
 	mcmc_unrot = mcmc['samples']
 	# Plot rotated
 	fig = plt.figure()
 	ax = fig.add_subplot(111)
-	ax.plot(mcmc_rot[:,0], mcmc_rot[:,1], '.', c='grey', zorder=-10)
+	ax.plot(mcmc_rot[:,0], mcmc_rot[:,1], '.', c='grey')
 	# Plot mean
-	y_stdev = mcmc['proposal_stdev'][0]
-	ax.errorbar(np.mean(mcmc_rot[:,0]), np.mean(mcmc_rot[:,1]), yerr=y_stdev, ms='.', c='k')
+	mean_x = np.mean(mcmc_rot[:,0])
+	mean_y = np.mean(mcmc_rot[:,1])
+	ax.plot(mean_x, mean_y, '.k')
+	# Plot proposal standard deviation
+	x_stdev = (mcmc['proposal_stdev'][0][0])
+	x_stdev = [(mean_x + x_stdev), (mean_x - x_stdev)]
+	y_stdev = (mcmc['proposal_stdev'][1][0])
+	y_stdev = [(mean_y + y_stdev), (mean_y - y_stdev)]
+	x = [mean_x, mean_x]
+	y = [mean_y, mean_y]
+	ax.plot(x, y_stdev, 'k', linewidth=2)
+	ax.plot(x_stdev, y, 'k', linewidth=2)
 	# Label axes
 	ax.set_xlim(-1.0, 1.0)
 	ax.set_ylim(-1.0, 1.0)
 	ax.set_xlabel(r'$\theta_{1}$'', ''$rotated$', fontsize=28)
 	ax.set_ylabel(r'$\theta_{2}$'', ''$rotated$', fontsize=28)
 	ax.tick_params(axis='both', which='major', labelsize=20)
+	fig.subplots_adjust(bottom=0.15, left=0.15)
 
 	fig.savefig('rot.png')
 	fig.show()
@@ -497,15 +524,31 @@ def plot_rotation(mcmc_rot, mcmc):
 	# Plot unrotated for comparison
 	fig = plt.figure()
 	ax = fig.add_subplot(111)
-	ax.plot(mcmc_unrot[:,0], mcmc_unrot[:,1], '.', c='grey')
+	ax.plot(mcmc_unrot[:,0], mcmc_unrot[:,1], '.', c='grey', zorder=-10)
 	# Plot mean
 	ax.plot(np.mean(mcmc_unrot[:,0]), np.mean(mcmc_unrot[:,1]), '.k')
+	# Plot proposal standard deviation
+	# Transform ???
+	stdev_y_unrot_plus = np.array([[mean_x], [y_stdev[0]]])
+	stdev_y_unrot_minus = np.array([[mean_x], [y_stdev[1]]])
+	stdev_x_unrot_plus = np.array([[x_stdev[0]], [mean_y]])
+	stdev_x_unrot_minus = np.array([[x_stdev[1]], [mean_y]])
+
+	stdev_y_unrot_plus = circle_to_ellipse(stdev_y_unrot_plus, sample_mean, axis1, axis2)
+	stdev_y_unrot_minus = circle_to_ellipse(stdev_y_unrot_minus, sample_mean, axis1, axis2)
+	stdev_x_unrot_plus = circle_to_ellipse(stdev_x_unrot_plus, sample_mean, axis1, axis2)
+	stdev_x_unrot_minus = circle_to_ellipse(stdev_x_unrot_minus, sample_mean, axis1, axis2)
+		
+	ax.plot([stdev_x_unrot_plus[0], stdev_x_unrot_minus[0]], [stdev_x_unrot_plus[1], stdev_x_unrot_minus[1]], 'k', linewidth=2)
+	ax.plot([stdev_y_unrot_plus[0], stdev_y_unrot_minus[0]], [stdev_y_unrot_plus[1], stdev_y_unrot_minus[1]], 'k', linewidth=2)
+
 	# Label axes
 	ax.set_xlabel(r'$\theta_{1}$', fontsize=28)
 	ax.set_ylabel(r'$\theta_{2}$', fontsize=28)
 	ax.set_xlim(-0.4, 0.4)
 	ax.set_ylim(0.8, 2.0)
 	ax.tick_params(axis='both', which='major', labelsize=20)
+	fig.subplots_adjust(bottom=0.15)
 
 	fig.savefig('unrot.png')
 	fig.show()
@@ -517,8 +560,7 @@ def main():
 	print('analytical mean:')
 	print(posterior_stats['mean'])
 
-	plt.figure()
-	contours(posterior_stats, 'red', 'solid', '*')
+	#contours(posterior_stats, 'red', 'solid', '*')
 
 	mcmc_init = metropolis_hastings(posterior_stats)
 
@@ -539,10 +581,8 @@ def main():
 	#print(a)
 
 	mcmc, mcmc_rot, acceptance_ratio = metropolis_hastings_rot(posterior_stats, mcmc_init['mean'], axis1, axis2)
-	plt.show()
-	plot_rotation(mcmc_rot, mcmc)
-	sigma1, sigma2, sigma3 = contours(mcmc, 'blue', 'dashed', 'x')
-	plt.show()
+	plot_rotation(mcmc_rot, mcmc, mcmc_init['mean'], axis1, axis2)
+	#sigma1, sigma2, sigma3 = contours(mcmc, 'blue', 'dashed', 'x')
 	print('mcmc mean:')
 	print(mcmc['mean'])
 	plot_samples(mcmc, 200)
@@ -556,4 +596,5 @@ def main():
 
 
 if __name__ == '__main__':
+
 	main()
