@@ -117,31 +117,31 @@ def plot_rejection_sampling(thetas, posteriors, x_accepts, bins):
 	bin_width = bin_edges[1] - bin_edges[0]
 	hist = hist / max(hist)
 	ax.bar(bin_edges[:-1], hist, bin_width, color='green')
+	ax.tick_params(axis='both', which='major', labelsize=20)
 
 	# Create strings to show numerical mean and standard deviation on graphs
 	mean = numpy.mean(x_accepts)
 	stdev = numpy.std(x_accepts)
-	display_string = ('$\mu_{{MC}} =$ {0:.3f} \n$\sigma_{{MC}} =$ {1:.3f}').format(mean, stdev)
+	display_string = ('$\mu_{{MC}} = {0:.3f} $\n$\sigma_{{MC}} = {1:.3f}$').format(mean, stdev)
 
-	plt.xlabel(r'$\theta$', fontsize=16)
-	plt.ylabel(r'$\propto P(\theta|x)$', fontsize=16)
-	plt.text(0.7, 0.8, display_string, transform=ax.transAxes, fontsize=16)
+	plt.xlabel(r'$\theta$', fontsize=28)
+	plt.ylabel(r'$\propto P(\theta|x)$', fontsize=28)
+	plt.text(0.7, 0.8, display_string, transform=ax.transAxes, fontsize=20)
 	plt.savefig('rejection.png', bbox_inches='tight')
 	plt.show()
 
 	# Plot log
+	fig, ax = plt.subplots()
 	plt.plot(thetas, -numpy.log(posteriors), linewidth=3)
-	plt.bar(bin_edges[:-1], -numpy.log(hist), bin_width, color='green')
+	ax.bar(bin_edges[:-1], -numpy.log(hist), bin_width, color='green')
+	ax.tick_params(axis='both', which='major', labelsize=20)
 
-	plt.xlabel(r'$\theta$', fontsize=16)
-	plt.ylabel(r'$\propto log(P(\theta|x))$', fontsize=16)
-	plt.text(0.5, 0.5, display_string, transform=ax.transAxes, fontsize=16)
+	plt.xlabel(r'$\theta$', fontsize=28)
+	plt.ylabel(r'$\propto log(P(\theta|x))$', fontsize=28)
+	plt.text(0.5, 0.5, display_string, transform=ax.transAxes, fontsize=20)
 
 	plt.savefig('rejlog.png', bbox_inches='tight')
 	plt.show()
-
-
-	
 
 def plot_metropolis_hastings(thetas, posteriors, thetas_mh, bins):
 	""" Plot analytical solution and Metropolis-Hastinga solution on same graph """
@@ -153,30 +153,69 @@ def plot_metropolis_hastings(thetas, posteriors, thetas_mh, bins):
 	bin_width = bin_edges[1] - bin_edges[0]
 	hist = hist / max(hist)
 	ax.bar(bin_edges[:-1], hist, bin_width, color='green')
+	ax.tick_params(axis='both', which='major', labelsize=20)
 
 	# Create strings to show numerical mean and standard deviation on graphs
 	mean = numpy.mean(thetas_mh)
 	stdev = numpy.std(thetas_mh)
-	display_string = ('$\mu_{{MC}} =$ {0:.3f} \n$\sigma_{{MC}} =$ {1:.3f}').format(mean, stdev)
+	display_string = ('$\mu_{{MC}} = {0:.3f} $\n$\sigma_{{MC}} = {1:.3f}$').format(mean, stdev)
 
-	plt.xlabel(r'$\theta$', fontsize=16)
-	plt.ylabel(r'$\propto P(\theta|x)$', fontsize=16)
-	plt.text(0.7, 0.8, display_string, transform=ax.transAxes, fontsize=16)
+	plt.xlabel(r'$\theta$', fontsize=28)
+	plt.ylabel(r'$\propto P(\theta|x)$', fontsize=28)
+	plt.text(0.7, 0.8, display_string, transform=ax.transAxes, fontsize=20)
 	plt.savefig('metropolishastings.png', bbox_inches='tight')
 	plt.show()
 
 	# Plot log
+	fig, ax = plt.subplots()
 	plt.plot(thetas, -numpy.log(posteriors), linewidth=3)
-	plt.bar(bin_edges[:-1], -numpy.log(hist), bin_width, color='green')
+	ax.bar(bin_edges[:-1], -numpy.log(hist), bin_width, color='green')
+	ax.tick_params(axis='both', which='major', labelsize=20)
 
-	plt.xlabel(r'$\theta$', fontsize=16)
-	plt.ylabel(r'$\propto log(P(\theta|x))$', fontsize=16)
-	plt.text(0.5, 0.5, display_string, transform=ax.transAxes, fontsize=16)
+	plt.xlabel(r'$\theta$', fontsize=28)
+	plt.ylabel(r'$\propto log(P(\theta|x))$', fontsize=28)
+	plt.text(0.5, 0.5, display_string, transform=ax.transAxes, fontsize=20)
 
 	plt.savefig('mhlog.png', bbox_inches='tight')
 	plt.show()
+	
+	# Plot with burn-in removed
+	hist, bin_edges = numpy.histogram(thetas_mh[200:], bins)	
+	bin_width = bin_edges[1] - bin_edges[0]
+	hist = hist / max(hist)
 
+	fig, ax = plt.subplots()
+	plt.plot(thetas, posteriors, linewidth=3)
 
+	# Metropolis-Hastings 
+	ax.bar(bin_edges[:-1], hist, bin_width, color='green')
+	ax.tick_params(axis='both', which='major', labelsize=20)
+
+	# Create strings to show numerical mean and standard deviation on graphs
+	mean = numpy.mean(thetas_mh[200:])
+	stdev = numpy.std(thetas_mh[200:])
+	display_string = ('$\mu_{{MC}} = {0:.3f} $\n$\sigma_{{MC}} = {1:.3f}$').format(mean, stdev)
+
+	plt.xlabel(r'$\theta$', fontsize=28)
+	plt.ylabel(r'$\propto P(\theta|x)$', fontsize=28)
+	plt.text(0.7, 0.8, display_string, transform=ax.transAxes, fontsize=20)
+	plt.savefig('metropolishastings-burnin.png', bbox_inches='tight')
+	plt.show()
+
+	# Plot log
+	fig, ax = plt.subplots()
+	plt.plot(thetas, -numpy.log(posteriors), linewidth=3)
+
+	ax.bar(bin_edges[:-1], -numpy.log(hist), bin_width, color='green')
+	ax.tick_params(axis='both', which='major', labelsize=20)
+
+	plt.xlabel(r'$\theta$', fontsize=28)
+	plt.ylabel(r'$\propto log(P(\theta|x))$', fontsize=28)
+	plt.text(0.5, 0.5, display_string, transform=ax.transAxes, fontsize=20)
+
+	plt.savefig('mhlog-burnin.png', bbox_inches='tight')
+	plt.show()
+	
 #def plot_log(thetas, posteriors, numerical_thetas, bins):
 	#""" Plot logarithm of histogram for numerical methods """
 	#fig, ax = plt.subplots()
@@ -319,7 +358,7 @@ def main():
 	bins = 100
 	# Number of stdevs from the mean over which analytical and rejection sampling results will be found
 	width = 5
-	iterations = 100000
+	iterations = 200000
 
 	posterior_stats, theta_range = setup(population_mean, population_stdev, sample_size, prior_stdev, width)
 
@@ -328,7 +367,7 @@ def main():
 	thetas, posteriors = analytical(posterior_stats, theta_range, data_points)
 
 	if (args.mode == 'convergence') or (args.mode == 'all'):
-		plot_convergence(posterior_stats, 0.01, 0.1, 0.5, 0.7, 1000)
+		plot_convergence(posterior_stats, 0.01, 0.1, 0.5, 1.2, 1000)
 
 	if (args.mode == 'rejection') or (args.mode == 'all'):
 		# Rejection sampling
@@ -337,7 +376,7 @@ def main():
 
 	if (args.mode == 'metropolis_hastings') or (args.mode == 'proposal') or (args.mode == 'all'):
 		# Variables required by metropolis and proposal
-		theta_initial = 0.1
+		theta_initial = 0.2
 		
 	if (args.mode == 'metropolis_hastings') or (args.mode == 'all'):
 		# Metropolis-Hastings
