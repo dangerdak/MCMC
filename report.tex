@@ -33,9 +33,17 @@ Dimensional Gaussian}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{abstract} 
-The Metropolis-Hastings algorithm was used to generate samples from a probability
-distribution. The samples were used, via maximum likelihood estimates to
-find Monte Carlo estimates for the parameters of the distribution.
+The Metropolis-Hastings algorithm was used to generate samples from the
+bivariate probability distribution for a toy problem. The samples were used,
+via maximum likelihood estimates, to find Monte Carlo estimates for the
+parameters of the distribution, which were then compared to those found
+analytically. They were found to match well, with an analytical solution of 
+$\theta = \begin{bmatrix} 
+		-0.012 \\ 
+	1.329 \end{bmatrix}$ and a Monte Carlo estimate $\theta_{MC} = \begin{bmatrix} 
+		-0.011 \\ 
+	1.326 \end{bmatrix}$.  
+
 \end{abstract}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -109,13 +117,29 @@ sample if $y < P(\theta = r|x)$, and rejecting otherwise. The accepted points ar
 effectively a series of samples from the target distribution. From these
 samples using the maximum-likelihood estimates for mean and variance gives the
 Monte Carlo estimates for said quantities. It is important that $Q(\theta) >
-P(\theta|x) \, \forall \, \theta$. 
+P(\theta|x) \, \forall \, \theta$. For simplicity, a uniform distribution is often used.
 
-\subsection{Markov Chains} 
-\subsection{Metropolis-Hastings Algorithm}
-\subsection{Examples of Applications}
+\subsection{Markov Chains \& The Metropolis-Hastings Algorithm}
+Markov chains describe the probability of transitions between different states
+in a system. Specifically, for a sequence to be a Markov chain, the
+probability of transitioning to a state must depend only on the current state
+and not on any previous states.
+
+In Markov Chain Monte Carlo a Monte Carlo method is used where the sequence of
+states is a Markov Chain. There are a number of algorithms which achieve this
+(see, for example, Gibbs sampling).
+Here we have used the Metropolis-Hastings algorithm, in which the next state is
+given by a proposal distribution, similar to that described above. However,
+in this case the proposal distribution is always centred on the current state.
+This results in a Markov Chain with the target distribution as its equillibrium
+distribution.
+
+\subsection{Applications}
+
+\section{Univariate Target Distribution}
+
 \subsection{Analytical Solution}
-In this case we have a simple gaussian prior and likelihood, and it can be shown
+In this case we have a simple gaussian prior and likelihood, for which it can be shown
 that the resulting posterior is also a gaussian (see \cref{sec:posterior}).
 Because we know the form of the equation for a gaussian distribution, it can be
 seen that the posterior mean and standard deviation are given by:
@@ -128,7 +152,7 @@ seen that the posterior mean and standard deviation are given by:
 \end{equation}
 
 This analytical solution gives us something to which our MCMC results can be
-compared. However, in real world applications of MCMC, of course this would not
+compared. However, in real world applications of MCMC this of course would not
 be available.
 
 \subsection{Rejection Sampling} 
@@ -163,12 +187,11 @@ an infinite domain, and in this algorithm we must choose definite cut-off
 points. The wider the domain the smaller the effect of this will be, but the
 number of rejected candidate points will be larger. As there always has to be a
 cut-off somewhere, this is an area where the Metropolis-Hastings algorithm will
-be more effective (RANDOM WALK???). (AND ALSO ERROR - HOW DOES IT GO WITH MORE
-DIMENSIONS??? - AND
-EFFICIENCY???) (AND OTHER WAYS IT'S BETTER???).
+be more effective. 
 
 \subsection{Metropolis-Hastings Algorithm} 
-The Metropolis-Hastings algorithm was then applied to the same problem. 
+The Metropolis-Hastings algorithm was then applied to the same problem, using a
+Gaussian proposal distribution. 
 \begin{figure}[ht]
 	\centering
 	\begin{subfigure}[t]{0.4\textwidth}
@@ -189,18 +212,18 @@ The Metropolis-Hastings algorithm was then applied to the same problem.
 	as compared with \cref{fig:rejlog}.}
 		\label{fig:mhlog}
 	\end{subfigure}
-	\label{mhplots}
+	\label{fig:mhplots}
 \end{figure}
 
-BURN-IN??? - INC MULTIPLE STARTS CONVERGING
-It can be seen from \cref{fig:mhplots} that there are some samples which are clear
+It can be seen from figure \ref{fig:mhplots} that there are some samples which are clear
 outliers from the distribution. This is due to a poor starting value for the
 chain. Starting far from the high-probability parts of the distribution results
 in a disproportionate number of extreme values being accepted in the early
 iterations. These early samples are sometimes discarded as burn-in. There is
 some debate over how best to determine the length of the burn-in period, and
-indeed whether a burn-in should be used at all. reference ??? One approach
-which may be used is running multiple chains from widely varied starting
+indeed whether a burn-in should be used at all \cite{handbook}.
+A simple qualitative approach for determining the length of the burn-in 
+would be to run multiple chains from very different starting
 positions. When these chains meet, one would expect the chains to have
 converged to the target distribution and so all previous points can be
 discarded. 
@@ -208,20 +231,45 @@ discarded.
 	\centering
 	\includegraphics[width=0.8\textwidth]{convergence.png}
 	\caption{Starting the chain from three very different states gives us
-	an idea of how the chain converges.}
+	an idea of how the chain converges. We see the chains meet after
+	about 200 iterations, suggesting that the chain converges around here.}
 	\label{fig:convergence}
 \end{figure}
+In figure \ref{fig:convergence} we see three very different starting $\theta$
+values which appear to converge after about 200 iterations, so we take 200
+iterations as the burn-in period, as is seen in figure \ref{fig:mhplotsb}.
+\begin{figure}[ht]
+	\centering
+	\begin{subfigure}[t]{0.4\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{metropolishastings-burnin.png}
+		\caption{The results from the Metropolis-Hastings algorithm
+		with the first 200 iterations removed as burn-in. Although the
+		plot appears different, the critical results ($\mu$ and $\sigma$)
+	remain the same to 3 significant figures.}
+		\label{fig:metropolisb}
+	\end{subfigure}
+	~
+	\begin{subfigure}[t]{0.4\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{mhlog-burnin.png}
+		\caption{A log plot of the Metropolis-Hastings results.}
+		\label{fig:mhlogb}
+	\end{subfigure}
+	\label{fig:mhplotsb}
+\end{figure}
+
 While this approach provides some evidence that the chains are converging
 regardless of starting position, it should not be regarded as definitive as not
 all starting positions can be tested. For some multi-peak distributions it is
 conceivable that multiple chains with very different initial states may become
 stuck in the same area for some time.
-PROPOSAL SIGMA/ACCEPTANCE RATE???
-
+PROPOSAL SIGMA/ACCEPTANCE RATE ???
 MC SIGMA INDEPENDENT OF PROPOSAL SIGMA
+
 \subsection{Analytical vs Rejection vs MH}
 
-\section{Two-Dimensional Target Distribution} 
+\section{Bivariate Target Distribution} 
 \subsection{Analytical Solution}
 Consider the linear model
 \begin{equation}
@@ -276,21 +324,8 @@ From this we find that the posterior mean,
 	\label{fig:model}
 \end{figure}
 
-\subsection{Metropolis-Hastings} 
-The Metropolis-Hastings algorithm was then applied to this bivariate posterior
-distribution. The program includes a preliminary run - this is done in order
-to find a rough outline of the posterior distribution. From this the
-orientation of the elliptical distribution can be found, which is used in order
-to transform the distribution to a unit circle. Samples are taken from this
-using Metropolis-Hastings, and then transformed back to the original
-distribution. This makes the choice of proposal distribution simpler and the
-algorithm more efficient - it is easiest to choose the proposal distribution
-such that the standard deviation is specified in the x and y directions.
-However if the ellipse of our desired distribution is not aligned with the axes
-then this will reduce the efficiency of the mixing. Transforming the ellipse
-not only aligns it to the axes (and thus to the proposal distribution) but also
-means we can use the same proposal standard devation in along each axis.
-\begin{figure}[ht]
+\subsection{Metropolis-Hastings Algorithm} 
+\begin{figure}[htb]
 	\centering
 	\begin{subfigure}[t]{0.4\linewidth}
 		\centering
@@ -310,7 +345,24 @@ means we can use the same proposal standard devation in along each axis.
 		have been used if the ellipse hadn't been rotated is shown in dashed red. ??? }
 		\label{fig:unrot}
 	\end{subfigure}
+	\label{fig:rot-unrot}
 \end{figure}
+
+The Metropolis-Hastings algorithm was then applied to this bivariate posterior
+distribution. The program includes a preliminary run - this is done in order
+to find a rough outline of the posterior distribution. From this the
+orientation of the elliptical distribution can be found, which is used in order
+to transform the distribution to a unit circle. Samples are taken from this
+using Metropolis-Hastings, and then transformed back to the original
+distribution, as seen in figure \ref{fig:rot-unrot}. 
+This makes the choice of proposal distribution simpler and the
+algorithm more efficient - it is easiest to choose the proposal distribution
+such that the standard deviation is specified in the x and y directions.
+However if the ellipse of our desired distribution is not aligned with the axes
+then this will reduce the efficiency of the mixing. Transforming the ellipse
+not only aligns it to the axes (and thus to the proposal distribution) but also
+means we can use the same proposal standard devation in along each axis.
+
 The standard deviation was chosen such the the acceptance rate $a \approx 0.35$
 as according to Gelman et. al this is the optimal value for a
 normal target distribution in two dimensions \cite{acceptance}.
@@ -345,6 +397,13 @@ remove the need for a burn-in\cite{handbook}.
 \subsection{Analytical vs MH}
 
 \section{Conclusion}
+We have seen that the Metropolis-Hastings algorithm produces better results in
+the one-dimensional case than rejection sampling. On applying this to a
+two-dimensional toy problem we found that it produced results which match the
+analytical solution well, suggesting that it would be a good choice of MCMC
+method for future problems. However, we used a preliminary run to improve the
+results of the main run, which may not always be convenient.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \appendix 
