@@ -80,20 +80,6 @@ def setup(measurement_uncertainty):
 
 	return data, posterior_stats
 
-def analytical(posterior_stats):
-	domain_1 = 0.8
-	domain_2 = 1.5
-	res = 1000
-
-	theta_1_initial = posterior_stats['mean'][0] - domain_1/2
-	theta_2_initial = posterior_stats['mean'][1] - domain_2/2
-
-	thetas = {'1': np.zeros((res,1)), '2':np.zeros((res,1)), 'initial_1': theta_1_initial, 'initial_2': theta_2_initial}
-
-	# ??? Dont think I need this unless analytical contours need it......
-
-	return analytical_posteriors
-
 def calculate_ln_posterior(thetas, posterior_stats):
 	"""Calculate the natural logarithm of the posterior for given theta values."""
 	ln_posterior = np.dot(posterior_stats['fisher'], (thetas - posterior_stats['mean']))
@@ -245,7 +231,7 @@ def sigma_boundary(counts, percentage):
 	# Create a mask for counts outside of percentage boundary
 	sum_mask = cumulative_counts < (percentage /100) * np.sum(counts)
 	sigma_sorted = sum_mask * counts_desc
-	# ??? Assume that density is ??? ellipse equivalent of radially symmetric
+	# Assume that density is ellipse equivalent of radially symmetric
 	sigma_min = min(sigma_sorted[sigma_sorted.nonzero()])
 
 	return sigma_min
@@ -291,11 +277,6 @@ def plot_samples(mcmc, res):
 	fig.subplots_adjust(bottom=0.15)
 
 	fig.savefig('equalweight.png')
-	fig.show()
-
-	#filled_numerical_contours = find_numerical_contours(counts)
-	#ax.pcolormesh(x_edges, y_edges, filled_numerical_contours, cmap=plt.cm.binary)
-	#fig.show()
 	
 def marginalize(counts):
 	"""Find marginalized distribution for each parameter."""
@@ -321,11 +302,18 @@ def plot_marginalized(mcmc, res):
 	filled_numerical_contours = find_numerical_contours(counts)
 	ax1.pcolormesh(x_edges, y_edges, filled_numerical_contours, cmap=plt.cm.binary)
 	
+	# String to display theta on plot
+	theta_1 = np.mean(mcmc['samples'][:,0])
+	theta_2 = np.mean(mcmc['samples'][:,1])
+	display_string = (r'$\bar{\theta}_1 = {0:.3f} $''\n'r'$\bar{\theta}_2 = {1:.3f} $').format(theta_1, theta_2)
+	
 	#ax1.pcolormesh(x_edges, y_edges, counts, cmap=plt.cm.gray)
 	ax1.set_ylim(min(y_edges), max(y_edges))
 	ax1.set_xlim(min(x_edges), max(x_edges))
 	contours(mcmc, 'blue', 'dashed', 'x')
+	plt.text(0.6, 0.8, display_string, transform=ax1.transAxes, fontsize=14)
 	ax1.tick_params(axis='both', labelleft='off', labelbottom='off')
+
 
 	marginalized = marginalize(counts)
 
@@ -337,7 +325,6 @@ def plot_marginalized(mcmc, res):
 	ax3.set_ylabel(r'P', fontsize=14)
 	ax3.set_xlim(min(x_edges), max(x_edges))
 	
-
 	ax0 = plt.subplot(gs[0], sharey=ax1)
 	ax0.barh(y_edges[:-1], marginalized['theta_2'], y_edges[1]-y_edges[0], color='white')
 	ax0.tick_params(axis='both', labelsize=10)
@@ -347,7 +334,6 @@ def plot_marginalized(mcmc, res):
 	ax0.set_ylim(min(y_edges), max(y_edges))
 
 	fig.savefig('marginalized.png')
-	plt.show()
 
 def ellipse_coords(mean, eigenval, eigenvec, level):
 	chi_square = {'1': 2.30, '2': 6.18, '3': 11.83}
@@ -437,7 +423,7 @@ def check_confidence_regions(sigma1, sigma2, sigma3, samples, mean):
 	sigma1_count = 0
 	sigma2_count = 0
 	sigma3_count = 0
-	# ???
+	
 	for sample in samples[1000:,:]:
 		test1 = ellipse_boundary(sigma1, sample, mean)
 		test2 = ellipse_boundary(sigma2, sample, mean)
@@ -466,7 +452,7 @@ def check_confidence_regions(sigma1, sigma2, sigma3, samples, mean):
 	return region_count
 
 
-def plot_data(data, posterior_stats):
+def plot_data(data, posterior_stats, mh, theta):
 	"""Plot simulated data and analytical result"""
 	fig, ax = plt.subplots()
 	#Plot data
@@ -478,18 +464,31 @@ def plot_data(data, posterior_stats):
 	ax.plot(x, x*posterior_stats['mean'][1] + posterior_stats['mean'][0])
 	plt.xlabel('$x$', fontsize=16)
 	plt.ylabel('$y$', fontsize=16)
+	
+	if (mh == 0):
+		# Display analytical theta values
+		theta_1 = posterior_stats['mean'][0][0]
+		theta_2 = posterior_stats['mean'][1][0]
+		print(posterior_stats['mean'])
+		display_string = (r'$y = \theta_1 + \theta_2 x$' '\n' r'$\theta_1 = {0:.3f}$, $\theta_2 = {1:.3f}$').format(theta_1, theta_2)
+		text_x = 0.5
+		text_y = 0.8
+		plt.text(text_x, text_y, display_string, transform=ax.transAxes, fontsize=16)
 
-	# Display theta values
-	theta_1 = posterior_stats['mean'][0][0]
-	theta_2 = posterior_stats['mean'][1][0]
-	print(posterior_stats['mean'])
-	display_string = (r'$y = \theta_1 + \theta_2 x$' '\n' r'$\theta_1 = {0:.3f}$, $\theta_2 = {1:.3f}$').format(theta_1, theta_2)
-	text_x = 0.5
-	text_y = 0.8
-	plt.text(text_x, text_y, display_string, transform=ax.transAxes, fontsize=16)
+		plt.savefig('2ddata.png')
 
-	plt.savefig('2ddata.png')
-	plt.show()
+	elif (mh == 1):
+		# Plot model
+		ax.plot(x, x*posterior_stats['mean'][1] + posterior_stats['mean'][0], linestyle='solid', color='green', linewidth=2, antialiased=True)
+
+		# Plot MCMC result
+		x_mc = np.arange(min(data['x']), (max(data['x']) + (max(data['x'] - min(data['x']))/10)), (max(data['x'] - min(data['x']))/10) )
+		ax.plot(x_mc, x_mc*theta[1] + theta[0], linestyle='dashed', color='black', linewidth=2,  antialiased=True)
+		plt.xlabel('$x$', fontsize=16)
+		plt.ylabel('$y$', fontsize=16)
+
+		plt.savefig('2ddata-mcmc.png')
+
 
 def plot_rotation(mcmc_rot, mcmc, sample_mean, axis1, axis2):
 	mcmc_unrot = mcmc['samples']
@@ -501,25 +500,24 @@ def plot_rotation(mcmc_rot, mcmc, sample_mean, axis1, axis2):
 	mean_x = np.mean(mcmc_rot[:,0])
 	mean_y = np.mean(mcmc_rot[:,1])
 	ax.plot(mean_x, mean_y, '.k')
-	# Plot proposal standard deviation
-	x_stdev = (mcmc['proposal_stdev'][0][0])
-	x_stdev = [(mean_x + x_stdev), (mean_x - x_stdev)]
-	y_stdev = (mcmc['proposal_stdev'][1][0])
-	y_stdev = [(mean_y + y_stdev), (mean_y - y_stdev)]
-	x = [mean_x, mean_x]
-	y = [mean_y, mean_y]
-	ax.plot(x, y_stdev, 'k', linewidth=2)
-	ax.plot(x_stdev, y, 'k', linewidth=2)
+	##  ??? Plot proposal standard deviation
+	#x_stdev = (mcmc['proposal_stdev'][0][0])
+	#x_stdev = [(mean_x + x_stdev), (mean_x - x_stdev)]
+	#y_stdev = (mcmc['proposal_stdev'][1][0])
+	#y_stdev = [(mean_y + y_stdev), (mean_y - y_stdev)]
+	#x = [mean_x, mean_x]
+	#y = [mean_y, mean_y]
+	#ax.plot(x, y_stdev, 'k', linewidth=2)
+	#ax.plot(x_stdev, y, 'k', linewidth=2)
 	# Label axes
 	ax.set_xlim(-1.0, 1.0)
 	ax.set_ylim(-1.0, 1.0)
-	ax.set_xlabel(r'$\theta_{1}$'', ''$rotated$', fontsize=28)
-	ax.set_ylabel(r'$\theta_{2}$'', ''$rotated$', fontsize=28)
+	ax.set_xlabel(r'$\theta_{1}$'', ''$transformed$', fontsize=28)
+	ax.set_ylabel(r'$\theta_{2}$'', ''$transformed$', fontsize=28)
 	ax.tick_params(axis='both', which='major', labelsize=20)
 	fig.subplots_adjust(bottom=0.15, left=0.15)
 
 	fig.savefig('rot.png')
-	fig.show()
 
 	# Plot unrotated for comparison
 	fig = plt.figure()
@@ -527,20 +525,20 @@ def plot_rotation(mcmc_rot, mcmc, sample_mean, axis1, axis2):
 	ax.plot(mcmc_unrot[:,0], mcmc_unrot[:,1], '.', c='grey', zorder=-10)
 	# Plot mean
 	ax.plot(np.mean(mcmc_unrot[:,0]), np.mean(mcmc_unrot[:,1]), '.k')
-	# Plot proposal standard deviation
-	# Transform ???
-	stdev_y_unrot_plus = np.array([[mean_x], [y_stdev[0]]])
-	stdev_y_unrot_minus = np.array([[mean_x], [y_stdev[1]]])
-	stdev_x_unrot_plus = np.array([[x_stdev[0]], [mean_y]])
-	stdev_x_unrot_minus = np.array([[x_stdev[1]], [mean_y]])
+	## ??? Plot proposal standard deviation
+	## Transform 
+	#stdev_y_unrot_plus = np.array([[mean_x], [y_stdev[0]]])
+	#stdev_y_unrot_minus = np.array([[mean_x], [y_stdev[1]]])
+	#stdev_x_unrot_plus = np.array([[x_stdev[0]], [mean_y]])
+	#stdev_x_unrot_minus = np.array([[x_stdev[1]], [mean_y]])
 
-	stdev_y_unrot_plus = circle_to_ellipse(stdev_y_unrot_plus, sample_mean, axis1, axis2)
-	stdev_y_unrot_minus = circle_to_ellipse(stdev_y_unrot_minus, sample_mean, axis1, axis2)
-	stdev_x_unrot_plus = circle_to_ellipse(stdev_x_unrot_plus, sample_mean, axis1, axis2)
-	stdev_x_unrot_minus = circle_to_ellipse(stdev_x_unrot_minus, sample_mean, axis1, axis2)
-		
-	ax.plot([stdev_x_unrot_plus[0], stdev_x_unrot_minus[0]], [stdev_x_unrot_plus[1], stdev_x_unrot_minus[1]], 'k', linewidth=2)
-	ax.plot([stdev_y_unrot_plus[0], stdev_y_unrot_minus[0]], [stdev_y_unrot_plus[1], stdev_y_unrot_minus[1]], 'k', linewidth=2)
+	#stdev_y_unrot_plus = circle_to_ellipse(stdev_y_unrot_plus, sample_mean, axis1, axis2)
+	#stdev_y_unrot_minus = circle_to_ellipse(stdev_y_unrot_minus, sample_mean, axis1, axis2)
+	#stdev_x_unrot_plus = circle_to_ellipse(stdev_x_unrot_plus, sample_mean, axis1, axis2)
+	#stdev_x_unrot_minus = circle_to_ellipse(stdev_x_unrot_minus, sample_mean, axis1, axis2)
+	#	
+	#ax.plot([stdev_x_unrot_plus[0], stdev_x_unrot_minus[0]], [stdev_x_unrot_plus[1], stdev_x_unrot_minus[1]], 'k', linewidth=2)
+	#ax.plot([stdev_y_unrot_plus[0], stdev_y_unrot_minus[0]], [stdev_y_unrot_plus[1], stdev_y_unrot_minus[1]], 'k', linewidth=2)
 
 	# Label axes
 	ax.set_xlabel(r'$\theta_{1}$', fontsize=28)
@@ -551,50 +549,28 @@ def plot_rotation(mcmc_rot, mcmc, sample_mean, axis1, axis2):
 	fig.subplots_adjust(bottom=0.15)
 
 	fig.savefig('unrot.png')
-	fig.show()
 
 def main():
 	measurement_uncertainty = 0.1
 	data, posterior_stats = setup(measurement_uncertainty)
-	plot_data(data, posterior_stats)
 	print('analytical mean:')
 	print(posterior_stats['mean'])
-
-	#contours(posterior_stats, 'red', 'solid', '*')
 
 	mcmc_init = metropolis_hastings(posterior_stats)
 
 	eigenval, eigenvec = np.linalg.eigh(mcmc_init['covar'])
 	axis1, axis2 = find_ellipse_info(mcmc_init['mean'].flatten(), eigenval, eigenvec, 2)
 
-	# ??? To plot rotated samples
-	#samples_rot = ellipse_to_circle(mcmc['samples'][0], mcmc['mean'], axis1, axis2)
-	#a = 0
-	#for sample in mcmc['samples'][1:,:]:
-	#	sample_rot = ellipse_to_circle(sample, mcmc['mean'], axis1, axis2)
-	#	a +=1
-	#	samples_rot = np.hstack((samples_rot, sample_rot))
-	#samples_rot = samples_rot.transpose()
-	#print('samples rot')
-	#print(samples_rot)
-	#print('a')
-	#print(a)
-
 	mcmc, mcmc_rot, acceptance_ratio = metropolis_hastings_rot(posterior_stats, mcmc_init['mean'], axis1, axis2)
+	# mh = 0 for plot without mcmc line, 1 for with it
+	plot_data(data, posterior_stats, 0, mcmc['mean'])
+	plot_data(data, posterior_stats, 1, mcmc['mean'])
 	plot_rotation(mcmc_rot, mcmc, mcmc_init['mean'], axis1, axis2)
-	#sigma1, sigma2, sigma3 = contours(mcmc, 'blue', 'dashed', 'x')
 	print('mcmc mean:')
 	print(mcmc['mean'])
 	plot_samples(mcmc, 200)
 	plot_marginalized(mcmc, 200)
 	
-	# ??? Give bad values
-	#region_percent = check_confidence_regions(sigma1, sigma2, sigma3, mcmc['samples'], mcmc['mean'])
-	#print('percents:')
-	#print(region_percent)
-	
-
-
 if __name__ == '__main__':
 
 	main()

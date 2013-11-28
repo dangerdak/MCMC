@@ -19,6 +19,16 @@
 \usepackage{amsmath}
 \usepackage{xfrac}
 
+% Code listings
+\usepackage{listings}
+% Code styling
+\usepackage{MnSymbol}
+\lstset{prebreak=\raisebox{0ex}[0ex][0ex]{\ensuremath{\rhookswarrow}}}
+\lstset{postbreak=\raisebox{0ex}[0ex][0ex]{\ensuremath{\rcurvearrowse\space}}}
+\lstset{breaklines=true, breakatwhitespace=true}
+\lstset{numbers=left, numberstyle=\scriptsize}
+\lstset{language=Python, basicstyle=\ttfamily}
+
 % Clever referencing
 \usepackage{cleveref}
 
@@ -33,16 +43,21 @@ Dimensional Gaussian}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{abstract} 
-The Metropolis-Hastings algorithm was used to generate samples from the
-bivariate probability distribution for a toy problem. The samples were used,
-via maximum likelihood estimates, to find Monte Carlo estimates for the
-parameters of the distribution, which were then compared to those found
-analytically. They were found to match well, with an analytical solution of 
+Rejection sampling and the Metropolis-Hastings algorithm were both
+implemented in the Python programming language and applied to the univariate
+Gaussian probability distribution for a parameter in a toy problem. Comparing
+these results the benefits of the latter algorithm were seen, and thus it was
+used to generate samples from the bivariate distribution for another toy
+problem with two unknown parameters.
+The samples were used, via maximum likelihood estimates, to find
+Monte Carlo estimates for the parameters of the distribution, which were then
+compared to those found analytically. The results were found to match well, with an
+analytical solution of 
 $\theta = \begin{bmatrix} 
 		-0.012 \\ 
 	1.329 \end{bmatrix}$ and a Monte Carlo estimate $\theta_{MC} = \begin{bmatrix} 
 		-0.011 \\ 
-	1.326 \end{bmatrix}$.  
+	1.326 \end{bmatrix}$, suggesting that the algorithm performed well.  
 
 \end{abstract}
 
@@ -59,20 +74,19 @@ While the idea of Monte Carlo simulations has been
 around for much longer, MCMC has flourished since the rise of computers allowed
 much larger simulations. It was originally developed by Metropolis et al. at Los Alamos in
 1953 to investigate the equation of state for substances consisting of
-individual interacting molecules \cite{metropolis}.  
+individual interacting molecules \cite{metropolis}. Today Markov Chain Monte
+Carlo methods are used for many applications in physics and particularly statistical
+mechanics, for example in simulating the Ising model\cite{statphys}.
 
-\subsection{Monte Carlo Methods \& Ordinary Monte Carlo}
+\subsection{Monte Carlo Methods}
 Monte Carlo methods use random numbers to solve problems.  A Monte Carlo method
-may be more narrowly defined as
+may be more specifically defined as
 "representing the solution of a problem as a parameter of a hypothetical
 population, and using a random sequence of numbers to construct a sample of the
 population, from which statistical estimates of the parameter can be found"
 \cite{halton}.  
 
-Ordinary Monte Carlo uses a sequence of random, independent identically distibuted
-numbers are used in
-
-A very simple example is a Monte Carlo estimate of $\pi$. Assume we have a
+A very simple example is a Monte Carlo estimate for the value of $\pi$. Assume we have a
 circle of radius one, contained exactly within a square ranging [-1, 1]. The
 probability of random points from a uniform distribution within this range
 landing in the circle is given by:
@@ -117,7 +131,7 @@ sample if $y < P(\theta = r|x)$, and rejecting otherwise. The accepted points ar
 effectively a series of samples from the target distribution. From these
 samples using the maximum-likelihood estimates for mean and variance gives the
 Monte Carlo estimates for said quantities. It is important that $Q(\theta) >
-P(\theta|x) \, \forall \, \theta$. For simplicity, a uniform distribution is often used.
+P(\theta|x)$ for every theta value. For simplicity, a uniform distribution is often used.
 
 \subsection{Markov Chains \& The Metropolis-Hastings Algorithm}
 Markov chains describe the probability of transitions between different states
@@ -134,21 +148,24 @@ in this case the proposal distribution is always centred on the current state.
 This results in a Markov Chain with the target distribution as its equillibrium
 distribution.
 
-\subsection{Applications}
-
 \section{Univariate Target Distribution}
+Here we use a toy problem based on set of measurements of size $N = 10$ shown in \cref{sec:data}, with sample mean $\bar{x} = 0.464$ and variance $\sigma^2 = 0.1$.
+These data are randomly generated from a Gaussian distribution, and are used in
+place of actual experimental results to update our knowledge about a
+distribution from the prior to the posterior. We use a Gaussian prior with mean
+$\mu_{prior} = 0$ and variance $\Sigma^{2} = 1.0$.
 
 \subsection{Analytical Solution}
-In this case we have a simple gaussian prior and likelihood, for which it can be shown
-that the resulting posterior is also a gaussian (see \cref{sec:posterior}).
+In this case we have a simple Gaussian prior and likelihood, for which it can be shown
+that the resulting posterior is also a Gaussian (see \cref{sec:posterior}).
 Because we know the form of the equation for a gaussian distribution, it can be
 seen that the posterior mean and standard deviation are given by:
 \begin{equation}
-	\mu_{post} = \frac{\Sigma^2}{\sfrac{\sigma^2}{N} + \Sigma^2} \bar{x},
+	\mu_{post} = \frac{\Sigma^2}{\sfrac{\sigma^2}{N} + \Sigma^2} \bar{x} = 0.463,
 \end{equation}
 
 \begin{equation}
-	\sigma_{post} = \left( \frac{1}{\Sigma^2} + \frac{N}{\sigma^2} \right)^{-\frac{1}{2}}.
+	\sigma_{post} = \left( \frac{1}{\Sigma^2} + \frac{N}{\sigma^2} \right)^{-\frac{1}{2}} = 0.032.
 \end{equation}
 
 This analytical solution gives us something to which our MCMC results can be
@@ -165,7 +182,7 @@ problem.
 		\includegraphics[width=\textwidth]{rejection.png}
 		\caption{The histogram in green represents the distribution
 			found by rejection sampling. The Monte Carlo mean and standard
-			deviation are found to be $\mu_{MC} = 0.what$ and $\mu_{MC} = 0.0wat$.
+			deviation are found to be $\mu_{MC} = 0.463$ and $\mu_{MC} = 0.032$.
 			The blue line is the analytical distribution.}
 		\label{fig:rejection}
 	\end{subfigure}
@@ -178,9 +195,10 @@ problem.
 		domain over which samples are taken using this method.}
 		\label{fig:rejlog}
 	\end{subfigure}
+	\caption{}\label{fig:rejplots}
 \end{figure}
 
-In \cref{fig:rejection}, the results appear to fit the analytical curve well.
+In figure \ref{fig:rejection}, the results appear to fit the analytical curve well.
 However, plotting the logarithm of the results allows us to see clearly differences at
 the edges of our Monte Carlo sample - this is because we can't take samples over
 an infinite domain, and in this algorithm we must choose definite cut-off
@@ -199,7 +217,7 @@ Gaussian proposal distribution.
 		\includegraphics[width=\textwidth]{metropolishastings.png}
 		\caption{The histogram in green represents the distribution
 			found by the Metropolis-Hastings algorithm. The Monte Carlo mean and standard
-			deviation are found to be $\mu_{MC} = 0.what$ and $\mu_{MC} = 0.0wat$.
+			deviation are found to be $\mu_{MC} = 0.463$ and $\sigma_{MC} = 0.032$.
 			The blue line is the analytical distribution.}
 		\label{fig:metropolis}
 	\end{subfigure}
@@ -209,13 +227,13 @@ Gaussian proposal distribution.
 		\includegraphics[width=\textwidth]{mhlog.png}
 		\caption{A log-plot of the Metropolis-Hastings results shows
 		that the sample is more consistent with the analytical solution,
-	as compared with \cref{fig:rejlog}.}
+	as compared with figure \ref{fig:rejlog}.}
 		\label{fig:mhlog}
 	\end{subfigure}
-	\label{fig:mhplots}
+	\caption{}\label{fig:mh}
 \end{figure}
 
-It can be seen from figure \ref{fig:mhplots} that there are some samples which are clear
+It can be seen from figure \ref{fig:mhlog} that there are some samples which are clear
 outliers from the distribution. This is due to a poor starting value for the
 chain. Starting far from the high-probability parts of the distribution results
 in a disproportionate number of extreme values being accepted in the early
@@ -227,7 +245,14 @@ would be to run multiple chains from very different starting
 positions. When these chains meet, one would expect the chains to have
 converged to the target distribution and so all previous points can be
 discarded. 
-\begin{figure}[htb]
+
+While this approach provides some evidence that the chains are converging
+regardless of starting position, it should not be regarded as definitive as not
+all starting positions can be tested. For some multi-peak distributions it is
+conceivable that multiple chains with very different initial states may become
+stuck in the same area for some time.
+
+\begin{figure}[!ht]
 	\centering
 	\includegraphics[width=0.8\textwidth]{convergence.png}
 	\caption{Starting the chain from three very different states gives us
@@ -238,32 +263,32 @@ discarded.
 In figure \ref{fig:convergence} we see three very different starting $\theta$
 values which appear to converge after about 200 iterations, so we take 200
 iterations as the burn-in period, as is seen in figure \ref{fig:mhplotsb}.
-\begin{figure}[ht]
+\begin{figure}[!ht]
 	\centering
 	\begin{subfigure}[t]{0.4\textwidth}
 		\centering
 		\includegraphics[width=\textwidth]{metropolishastings-burnin.png}
 		\caption{The results from the Metropolis-Hastings algorithm
-		with the first 200 iterations removed as burn-in. Although the
-		plot appears different, the critical results ($\mu$ and $\sigma$)
-	remain the same to 3 significant figures.}
+		with the first 200 iterations removed as burn-in. }
 		\label{fig:metropolisb}
 	\end{subfigure}
 	~
 	\begin{subfigure}[t]{0.4\textwidth}
 		\centering
 		\includegraphics[width=\textwidth]{mhlog-burnin.png}
-		\caption{A log plot of the Metropolis-Hastings results.}
+		\caption{A log plot of the Metropolis-Hastings results with
+		burn-in removed. Although the plot appears different, $\mu$
+		remains the same to 3 significant figures, and the standard deviation
+		is also unaffected at this precision.}
 		\label{fig:mhlogb}
 	\end{subfigure}
-	\label{fig:mhplotsb}
+	\caption{}\label{fig:mhplotsb}
 \end{figure}
-
-While this approach provides some evidence that the chains are converging
-regardless of starting position, it should not be regarded as definitive as not
-all starting positions can be tested. For some multi-peak distributions it is
-conceivable that multiple chains with very different initial states may become
-stuck in the same area for some time.
+In figure \ref{fig:mhlogb} it appears that altough closer than the rejection
+sampling case, there are still some issues at extreme $\theta$ values. It can be seen that
+the histogram slightly overshoots the analytical plot at the edges - as this is a log
+plot this suggests that the more extreme values are under-represented in our
+sample.
 PROPOSAL SIGMA/ACCEPTANCE RATE ???
 MC SIGMA INDEPENDENT OF PROPOSAL SIGMA
 
@@ -282,9 +307,9 @@ mean and zero correlation, then the likelihood function can be shown to take the
 \begin{equation}
 	p(y|\theta) = \mathcal{L}_0 \exp\left[-\frac{1}{2}(\theta - \theta_0)^tL(\theta - \theta_0)\right],
 \end{equation}
-where $L$ is the likelihood fisher matrix, and $\mathcal{L}_1$ is a constant (see \cref{sec:2dlikelihood}).
-
-what's theta0? ???
+where $L$ is the likelihood fisher matrix, $\mathcal{L}_1$ is a constant, and
+$\theta_0$ is dependent on $L$ and constants related to the linear model above
+(see \cref{sec:2dlikelihood}).
 
 If we then also say we have a Gaussian prior with zero mean and Fisher matrix $P$, i.e.
 \begin{equation}
@@ -307,7 +332,7 @@ specialize to the bivariate case. Specifically we take a prior with Fisher matri
 		10^{-2} & 0 \\
 		0 & 10^{-2}
 	\end{bmatrix}, $
-and a set of simulated data points with noise (see \cref{sec:2ddata}).
+and a set of simulated data points with noise (see \cref{sec:data}).
 From this we find that the posterior mean, 
 	$\bar{\theta} = \begin{bmatrix} 
 		\theta_1 \\ 
@@ -315,7 +340,7 @@ From this we find that the posterior mean,
 		-0.012 \\ 
 	1.329 \end{bmatrix}$.
 
-\begin{figure}[htb]
+\begin{figure}[!ht]
 	\centering
 	\includegraphics[width=0.8\textwidth]{2ddata.png}
 	\caption{In blue are the simulated data with their associated
@@ -325,14 +350,14 @@ From this we find that the posterior mean,
 \end{figure}
 
 \subsection{Metropolis-Hastings Algorithm} 
-\begin{figure}[htb]
+\begin{figure}[!ht]
 	\centering
 	\begin{subfigure}[t]{0.4\linewidth}
 		\centering
 		\includegraphics[width=\textwidth]{rot.png}
 		\caption{Metropolis-Hastings samples as they appear when
-		transformed. The proposal distribution standard deviation used
-		to generate them is shown in black.}
+		transformed. The proposal standard deviations can now be parallel to
+		the axes and easily explore the whole target distribution.}
 		\label{fig:rot}
 	\end{subfigure}
 	~
@@ -340,12 +365,11 @@ From this we find that the posterior mean,
 		\centering
 		\includegraphics[width=\textwidth]{unrot.png}
 		\caption{Metropolis-Hastings samples transformed back to
-		an ellipse. The transformed proposal standard deviation is shown
-		in black, and an example of the sort of standard deviation which would
-		have been used if the ellipse hadn't been rotated is shown in dashed red. ??? }
+		an ellipse. Proposal standard deviations are hard to optimise
+		for the distribution in this form. }
 		\label{fig:unrot}
 	\end{subfigure}
-	\label{fig:rot-unrot}
+	\caption{}\label{fig:rot-unrot}
 \end{figure}
 
 The Metropolis-Hastings algorithm was then applied to this bivariate posterior
@@ -363,22 +387,25 @@ then this will reduce the efficiency of the mixing. Transforming the ellipse
 not only aligns it to the axes (and thus to the proposal distribution) but also
 means we can use the same proposal standard devation in along each axis.
 
+Another benefit of using a preliminary run is that the resulting mean can be used
+as the initial $\theta$ in the main run. This may reduce mixing time, and
+remove the need for a burn-in\cite{handbook}.
+
 The standard deviation was chosen such the the acceptance rate $a \approx 0.35$
 as according to Gelman et. al this is the optimal value for a
 normal target distribution in two dimensions \cite{acceptance}.
-The results are shown below in \cref{fig:equalweight}, as equal weighted
-samples, and \cref{fig:marginalized} with confidence regions indicating those
+The results are shown below in figure \ref{fig:marginalized} with confidence regions indicating those
 regions containing 67\%, 95\% and 99\% of the samples.
 
-\begin{figure}[htb]
-	\centering
-	\includegraphics[width=0.8\textwidth]{equalweight.png}
-	\caption{Equal weight samples allow us to visualize the density even in the most dense regions.}
-	\label{fig:equalweight}
-\end{figure}
+%\begin{figure}[!ht]
+%	\centering
+%	\includegraphics[width=0.8\textwidth]{equalweight.png}
+%	\caption{Equal weight samples allow us to visualize the density even in the most dense regions.}
+%	\label{fig:equalweight}
+%\end{figure}
 
 
-\begin{figure}[htb]
+\begin{figure}[!ht]
 	\centering
 	\includegraphics[width=\textwidth]{marginalized.png}
 	\caption{On the top right is a plot of Metropolis-Hastings samples, shaded to
@@ -388,12 +415,25 @@ regions containing 67\%, 95\% and 99\% of the samples.
 	distributions for each parameter.}
 	\label{fig:marginalized}
 \end{figure}
-\cref{fig:marginalized} also shows the analytically calculated confidence
-regions, as well as marginalized distributions for each parameter.
 
-Another benefit of using a preliminary run is that the resulting mean can be used
-as the initial $\theta$ in the main run. This may reduce mixing time, and
-remove the need for a burn-in\cite{handbook}.
+Figure \ref{fig:marginalized} shows both the numerically approximated and
+analytically calculated confidence regions, as well as marginalized
+distributions for each parameter. The numerical approximation was made under
+the assumption that the population always decreases radially out from the mean.
+As we have a finite sample size this in practice is not always the case, and so
+the confidence regions are not as clear as they would be if we had not used
+such an assumption. However they serve to visually give us a clearer idea of of
+how well our MCMC samples fit the target distribution.
+
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[width=0.8\textwidth]{2ddata-mcmc.png}
+	\caption{As above, the green line is the analytical solution. The
+	dashed black line shows the model found using the Metropolis-Hastings
+	method.}
+	\label{fig:model-mcmc}
+\end{figure}
+
 \subsection{Analytical vs MH}
 
 \section{Conclusion}
@@ -402,7 +442,7 @@ the one-dimensional case than rejection sampling. On applying this to a
 two-dimensional toy problem we found that it produced results which match the
 analytical solution well, suggesting that it would be a good choice of MCMC
 method for future problems. However, we used a preliminary run to improve the
-results of the main run, which may not always be convenient.
+results of the main run, which takes extra time and may not always be convenient.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -566,7 +606,7 @@ Combining the exponents and taking the variable part of the result,
 	\theta^t P \theta + (\theta - \theta_0)^t L (\theta - \theta_0) &= \theta^t P \theta + \theta^t L \theta - \theta_0^t L \theta - \theta^t L \theta_0 + \theta_0^t L \theta_0
 	\\ &= \theta^t(L+P) \theta - \theta_0^t L \theta - \theta^t L \theta_0 + \theta_0^t L \theta_0.
 \end{align*}
-Constants can be added and subtracted from the exponent without effecting the proportionality, so we subtract $\theta_0^t L \theta_0$ and add $\theta_0^t L (L+P)^{-1} L \theta_0$:
+Constants can be added and subtracted from the exponent without affecting the proportionality, so we subtract $\theta_0^t L \theta_0$ and add $\theta_0^t L (L+P)^{-1} L \theta_0$:
 \begin{align*}
 	\theta^t(L+P) \theta - & \theta_0^t L \theta - \theta^t L \theta_0 + \theta_0^t L (L+P)^{-1} L \theta_0
 	\\ &= \theta^t(L+P) \theta - \theta_0^t L \theta - \theta^t(L+P)(L+P)^{-1} L \theta_0 + \theta_0^t L (L+P)^{-1} L \theta_0
@@ -590,9 +630,28 @@ Gaussian:
 with mean $\bar{\theta}$ and Fisher matrix $\mathcal{F}$.
 
 \section{Data}
-\label{sec:2ddata}
+\label{sec:data}
 
-\begin{tabular}{|c|c|}
+\begin{tabular}[t]{|c|}
+	\hline
+	Univariate Sample Data \\
+	\hline
+	0.594 \\
+	0.360 \\
+	0.432 \\
+	0.537 \\
+	0.398 \\
+	0.492 \\
+	0.517 \\
+	0.416 \\
+	0.369 \\
+	0.519 \\
+	\hline
+\end{tabular}
+\quad
+\begin{tabular}[t]{|c|c|}
+	\hline
+	\multicolumn{2}{|c|}{Bivariate Sample Data} \\
 	\hline
 	x & y \\ 
 	\hline 
@@ -608,15 +667,14 @@ with mean $\bar{\theta}$ and Fisher matrix $\mathcal{F}$.
 	0.0759 & 0.0964 \\
 	\hline
 \end{tabular}
-
 	
-
-
-\section{onedcode} 
+\section{Python Code for Univariate Model} 
 \label{sec:onedcode}
+\lstinputlisting{one_d.py}
 
-\section{twodcode}
+\section{Python Code for Bivariate Model}
 \label{sec:twodcode}
+\lstinputlisting{multivariate.py}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{thebibliography}{10}
@@ -628,16 +686,21 @@ with mean $\bar{\theta}$ and Fisher matrix $\mathcal{F}$.
 		[Online] 21 (6), 1087-1092. Available from: doi:
 		10.1063/1.1699114 [Accessed 21 October 2013].
 
-	\bibitem{applications}
-		Diaconis, P., 2009. The Markov Chain Monte Carlo Revolution.
-		\textit{Bull. Amer. Math. Soc.}, Vol. 46, pp. 179-205
+	\bibitem{statphys}
+		Newman, M., E., J., Barkema, G., T. (1999) \textit{Monte Carlo
+		Methods in Statistical Physics}. New York, Oxford Universit
+		Press.
+
+%	\bibitem{applications}
+%		Diaconis, P., (2009) The Markov Chain Monte Carlo Revolution.
+%		\textit{Bull. Amer. Math. Soc.}, Vol. 46, pp. 179-205
 
 	\bibitem{halton}
-		Halton, J., H., 1970. A Retrospective and Prospective Survey of
+		Halton, J., H. (1970) A Retrospective and Prospective Survey of
 		the Monte Method. \textit{SIAM Rev.}, Vol. 12, No. 1, pp. 1-63
 	
 	\bibitem{som}
-		Trotta, R., 2012. Statistics of Measurement: Summary Handout.
+		Trotta, R. (2012) Statistics of Measurement: Summary Handout.
 		London, Imperial College London, p. 14
 
 	\bibitem{inpractice}

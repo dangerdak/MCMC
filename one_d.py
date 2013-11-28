@@ -1,7 +1,6 @@
 import math
 import random
 from argparse import ArgumentParser
-
 import numpy
 import matplotlib.pyplot as plt
 
@@ -128,7 +127,6 @@ def plot_rejection_sampling(thetas, posteriors, x_accepts, bins):
 	plt.ylabel(r'$\propto P(\theta|x)$', fontsize=28)
 	plt.text(0.7, 0.8, display_string, transform=ax.transAxes, fontsize=20)
 	plt.savefig('rejection.png', bbox_inches='tight')
-	plt.show()
 
 	# Plot log
 	fig, ax = plt.subplots()
@@ -141,7 +139,6 @@ def plot_rejection_sampling(thetas, posteriors, x_accepts, bins):
 	plt.text(0.5, 0.5, display_string, transform=ax.transAxes, fontsize=20)
 
 	plt.savefig('rejlog.png', bbox_inches='tight')
-	plt.show()
 
 def plot_metropolis_hastings(thetas, posteriors, thetas_mh, bins):
 	""" Plot analytical solution and Metropolis-Hastinga solution on same graph """
@@ -164,7 +161,6 @@ def plot_metropolis_hastings(thetas, posteriors, thetas_mh, bins):
 	plt.ylabel(r'$\propto P(\theta|x)$', fontsize=28)
 	plt.text(0.7, 0.8, display_string, transform=ax.transAxes, fontsize=20)
 	plt.savefig('metropolishastings.png', bbox_inches='tight')
-	plt.show()
 
 	# Plot log
 	fig, ax = plt.subplots()
@@ -177,7 +173,6 @@ def plot_metropolis_hastings(thetas, posteriors, thetas_mh, bins):
 	plt.text(0.5, 0.5, display_string, transform=ax.transAxes, fontsize=20)
 
 	plt.savefig('mhlog.png', bbox_inches='tight')
-	plt.show()
 	
 	# Plot with burn-in removed
 	hist, bin_edges = numpy.histogram(thetas_mh[200:], bins)	
@@ -200,7 +195,6 @@ def plot_metropolis_hastings(thetas, posteriors, thetas_mh, bins):
 	plt.ylabel(r'$\propto P(\theta|x)$', fontsize=28)
 	plt.text(0.7, 0.8, display_string, transform=ax.transAxes, fontsize=20)
 	plt.savefig('metropolishastings-burnin.png', bbox_inches='tight')
-	plt.show()
 
 	# Plot log
 	fig, ax = plt.subplots()
@@ -214,70 +208,6 @@ def plot_metropolis_hastings(thetas, posteriors, thetas_mh, bins):
 	plt.text(0.5, 0.5, display_string, transform=ax.transAxes, fontsize=20)
 
 	plt.savefig('mhlog-burnin.png', bbox_inches='tight')
-	plt.show()
-	
-#def plot_log(thetas, posteriors, numerical_thetas, bins):
-	#""" Plot logarithm of histogram for numerical methods """
-	#fig, ax = plt.subplots()
-	#plt.plot(thetas, -numpy.log(posteriors), linewidth=3)
-
-	#hist, bin_edges = numpy.histogram(numerical_thetas, bins)	
-	#bin_width = bin_edges[1] - bin_edges[0]
-	#hist = hist / max(hist)
-	#plt.bar(bin_edges[:-1], -numpy.log(hist), bin_width, color='green')
-
-	## Create strings to show numerical mean and standard deviation on graphs
-	#mean = numpy.mean(numerical_thetas)
-	#stdev = numpy.std(numerical_thetas)
-	#display_string = ('$\mu_{{MC}} =$ {0:.3f} \n$\sigma_{{MC}} =$ {1:.3f}').format(mean, stdev)
-
-	#plt.xlabel(r'$\theta$', fontsize=16)
-	#plt.ylabel(r'$\propto log(P(\theta|x))$', fontsize=16)
-	#plt.text(0.5, 0.5, display_string, transform=ax.transAxes, fontsize=16)
-	#plt.savefig('recentlog.png', bbox_inches='tight')
-	#plt.show()
-
-#def plot_log_both(thetas, posteriors, thetas_r, thetas_mh, bins):
-	#""" Plot logarithm of histogram for both numerical methods in one figure"""
-	#fig, (ax1, ax2) = plt.subplots(1, 2, sharex=True, sharey=True)
-	#	
-	## Create strings to show numerical mean and standard deviation on graphs
-	#mean_r = numpy.mean(thetas_r)
-	#stdev_r = numpy.std(thetas_r)
-	#display_string_r = ('$\mu_{{MC}} =$ {0:.3f} \n$\sigma_{{MC}} =$ {1:.3f}').format(mean_r, stdev_r)
-
-	#mean_mh = numpy.mean(thetas_mh)
-	#stdev_mh = numpy.std(thetas_mh)
-	#display_string_mh = ('$\mu_{{MC}} =$ {0:.3f} \n$\sigma_{{MC}} =$ {1:.3f}').format(mean_mh, stdev_mh)
-	## Position relative to axes (0,1)
-	#text_x = 0.55
-	#text_y = 0.45
-
-	## Rejection sampling plot
-	#ax1.plot(thetas, -numpy.log(posteriors), linewidth=3)
-
-	#hist, bin_edges = numpy.histogram(thetas_r, bins)	
-	#bin_width = bin_edges[1] - bin_edges[0]
-	#hist = hist / max(hist)
-	#ax1.bar(bin_edges[:-1], -numpy.log(hist), bin_width, color='green')
-	#ax1.text(text_x, text_y, display_string_r, transform=ax1.transAxes, fontsize=16)
-
-	#ax1.set_xlabel(r'$\theta$', fontsize=16)
-	#ax1.set_ylabel(r'$\propto log(P(\theta|x))$', fontsize=16)
-
-	## Metropolis-Hastings plot
-	#ax2.plot(thetas, -numpy.log(posteriors), linewidth=3)
-
-	#hist, bin_edges = numpy.histogram(thetas_mh, bins)	
-	#bin_width = bin_edges[1] - bin_edges[0]
-	#hist = hist / max(hist)
-	#ax2.bar(bin_edges[:-1], -numpy.log(hist), bin_width, color='green')
-	#ax2.text(text_x, text_y, display_string_mh, transform=ax2.transAxes, fontsize=16)
-
-	#ax2.set_xlabel(r'$\theta$', fontsize=16)
-
-	#plt.savefig('bothlogs.png')
-	#plt.show()
 
 def plot_convergence(posterior_stats, proposal_stdev, start1=0.1, start2=0.5, start3=0.9, iterations=2000):
 	""" Burn-in plot for Metropolis-Hastings method """
@@ -292,7 +222,6 @@ def plot_convergence(posterior_stats, proposal_stdev, start1=0.1, start2=0.5, st
 	plt.xlabel('Iteration', fontsize=16)
 	plt.ylabel(r'$\theta$', fontsize=16)
 	plt.savefig('convergence.png', bbox_inches='tight')
-	plt.show()
 
 def plot_burn_in(iterations, thetas_mh, posteriors_mh):
 	""" Burn-in plot for Metropolis-Hastings method """
@@ -304,7 +233,6 @@ def plot_burn_in(iterations, thetas_mh, posteriors_mh):
 	plt.xlabel('Iteration', fontsize=16)
 	plt.ylabel(r'$\theta$', fontsize=16)
 	plt.savefig('burnin.png', bbox_inches='tight')
-	plt.show()
 
 def proposal_stdev_effects(posterior_stats, theta_initial, iterations, proposal_stdev_min = 0.06, proposal_stdev_max = 0.26, data_points = 20):
 	""" Returns data showing effects of changing the standard deviation of the proposal distribution """
@@ -339,7 +267,6 @@ def plot_proposal(proposal_stdevs, acceptance_rates, mh_stdevs):
 	plt.xlabel('Proposal Standard Deviation')
 	plt.ylabel('Posterior Standard Deviation')
 	plt.savefig('proposalstdev.png', bbox_inches='tight')
-	plt.show()
 	
 
 def main():
@@ -363,11 +290,17 @@ def main():
 	posterior_stats, theta_range = setup(population_mean, population_stdev, sample_size, prior_stdev, width)
 
 	# Analytical
+	print('analytical mean')
+	print(posterior_stats['mean'])
+	print('analytical standard deviation')
+	print(posterior_stats['stdev'])
+
 	data_points = 100
 	thetas, posteriors = analytical(posterior_stats, theta_range, data_points)
 
 	if (args.mode == 'convergence') or (args.mode == 'all'):
 		plot_convergence(posterior_stats, 0.01, 0.1, 0.5, 1.2, 1000)
+
 
 	if (args.mode == 'rejection') or (args.mode == 'all'):
 		# Rejection sampling
