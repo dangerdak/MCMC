@@ -423,7 +423,9 @@ the assumption that the population always decreases radially out from the mean.
 As we have a finite sample size this in practice is not always the case, and so
 the confidence regions are not as clear as they would be if we had not used
 such an assumption. However they serve to visually give us a clearer idea of of
-how well our MCMC samples fit the target distribution.
+how well our MCMC samples fit the target distribution. Checking the numerical
+approximation, the $1-$, $2-$ and $3-\sigma$ regions contain 67.9\%, 94.4\% and
+97.2\% of the samples respectively.
 
 \begin{figure}[!ht]
 	\centering
@@ -442,8 +444,11 @@ the one-dimensional case than rejection sampling. On applying this to a
 two-dimensional toy problem we found that it produced results which match the
 analytical solution well, suggesting that it would be a good choice of MCMC
 method for future problems. However, we used a preliminary run to improve the
-results of the main run, which takes extra time and may not always be convenient.
-
+results of the main run, which takes extra time and may not always be
+convenient. In order to achieve accuracy to 3 decimal places 300,000 iterations
+of Metropolis-Hastings were used. Running this takes some time, and it would be
+worthwhile to focus some more on improving the efficiency of the program. For
+example implementing it in C instead of Python may improve it's speed.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \appendix 
@@ -670,11 +675,11 @@ with mean $\bar{\theta}$ and Fisher matrix $\mathcal{F}$.
 	
 \section{Python Code for Univariate Model} 
 \label{sec:onedcode}
-\lstinputlisting{one_d.py}
+%\lstinputlisting{one_d.py}
 
 \section{Python Code for Bivariate Model}
 \label{sec:twodcode}
-\lstinputlisting{multivariate.py}
+%\lstinputlisting{multivariate.py}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{thebibliography}{10}
