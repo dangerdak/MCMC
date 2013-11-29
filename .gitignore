@@ -1,1 +1,10 @@
 *.png
+*.pdf
+*.un~
+*.aux
+*.log
+*.out
+*.toc
+multivariate-broken.py
+dataset.txt
+__pycache__/*
