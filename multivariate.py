@@ -136,7 +136,7 @@ def metropolis_hastings(posterior_stats):
 
 def metropolis_hastings_rot(posterior_stats, sample_mean, axis1, axis2):
 	"""Sample from posterior distribution using Metropolis-Hastings algorithm."""
-	iterations = 50000
+	iterations = 300000
 	theta = sample_mean
 	proposal_stdev = np.array([[0.35], [0.35]])
 	ln_posterior = calculate_ln_posterior(theta, posterior_stats)
@@ -242,7 +242,7 @@ def find_numerical_contours(counts):
 	one_sigma = counts > one_sigma_boundary
 	two_sigma_boundary = sigma_boundary(counts, 95)
 	two_sigma = (counts > two_sigma_boundary) & (counts < one_sigma_boundary)
-	three_sigma_boundary = sigma_boundary(counts, 98)
+	three_sigma_boundary = sigma_boundary(counts, 99)
 	three_sigma = (counts > three_sigma_boundary) & (counts < two_sigma_boundary)
 
 	# Check method: Output actual percentages in each region
@@ -305,7 +305,7 @@ def plot_marginalized(mcmc, res):
 	# String to display theta on plot
 	theta_1 = np.mean(mcmc['samples'][:,0])
 	theta_2 = np.mean(mcmc['samples'][:,1])
-	display_string = (r'$\bar{{\theta}} = {0:.3f} $''\n'r'$\bar{{\theta}} = {1:.3f} $').format(theta_1, theta_2)
+	display_string = (r'$\bar{{\theta}}_1 = {0:.3f} $''\n'r'$\bar{{\theta}}_2 = {1:.3f} $').format(theta_1, theta_2)
 	
 	#ax1.pcolormesh(x_edges, y_edges, counts, cmap=plt.cm.gray)
 	ax1.set_ylim(min(y_edges), max(y_edges))
