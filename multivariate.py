@@ -305,7 +305,7 @@ def plot_marginalized(mcmc, res):
 	# String to display theta on plot
 	theta_1 = np.mean(mcmc['samples'][:,0])
 	theta_2 = np.mean(mcmc['samples'][:,1])
-	display_string = (r'$\bar{\theta}_1 = {0:.3f} $''\n'r'$\bar{\theta}_2 = {1:.3f} $').format(theta_1, theta_2)
+	display_string = (r'$\bar{{\theta}} = {0:.3f} $''\n'r'$\bar{{\theta}} = {1:.3f} $').format(theta_1, theta_2)
 	
 	#ax1.pcolormesh(x_edges, y_edges, counts, cmap=plt.cm.gray)
 	ax1.set_ylim(min(y_edges), max(y_edges))
