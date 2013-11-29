@@ -34,8 +34,7 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{document} 
-\title{MCMC in Action: Applying the Metropolis-Hastings Algorithm to a Two
-Dimensional Gaussian}
+\title{MCMC in Action}
 
 \date{\today} 
 \author{Dakshina Scott} 
@@ -91,7 +90,7 @@ circle of radius one, contained exactly within a square ranging [-1, 1]. The
 probability of random points from a uniform distribution within this range
 landing in the circle is given by:
 \begin{equation}
-	P(inside) = \frac{\text{area of circle}}{\text{area of square}} =
+	P(inside) = \theta = \frac{\text{area of circle}}{\text{area of square}} =
 	\frac{\pi}{4}.
 \end{equation}
 As there are only two possible outcomes for each simulation - a point lands
@@ -101,7 +100,7 @@ the circle:
 \begin{equation}
 	I \sim \mathcal{B}(N, \theta)
 \end{equation}
-where $\theta = P(\text{inside})$, and $I$ is the number of successes.
+where $I$ is the number of successes.
 Thus we have represented the solution of our problem as a parameter of a
 hypothetical population, that is a binomial population with unknown probability
 of success.
@@ -111,7 +110,7 @@ on the number of success we observed in our random sampling:
 	\theta = \frac{I}{N},
 \end{equation}
 
-So a Monte Carlo estimate for $\pi$ is given by
+so a Monte Carlo estimate for $\pi$ is given by
 \begin{equation}
 	\pi_{MC} = 4 \theta = 4 \frac{I}{N}.
 \end{equation}
@@ -145,11 +144,13 @@ states is a Markov Chain. There are a number of algorithms which achieve this
 Here we have used the Metropolis-Hastings algorithm, in which the next state is
 given by a proposal distribution, similar to that described above. However,
 in this case the proposal distribution is always centred on the current state.
-This results in a Markov Chain with the target distribution as its equillibrium
-distribution.
+This results in a sequence of samples constituting a Markov Chain with the
+target distribution as its equillibrium distribution.
 
 \section{Univariate Target Distribution}
-Here we use a toy problem based on set of measurements of size $N = 10$ shown in \cref{sec:data}, with sample mean $\bar{x} = 0.464$ and variance $\sigma^2 = 0.1$.
+Here we use a toy problem based on set of measurements of size $N = 10$ (shown
+in \cref{sec:data}) with sample mean $\bar{x} = 0.464$ and variance $\sigma^2 =
+0.1$.
 These data are randomly generated from a Gaussian distribution, and are used in
 place of actual experimental results to update our knowledge about a
 distribution from the prior to the posterior. We use a Gaussian prior with mean
@@ -284,25 +285,20 @@ iterations as the burn-in period, as is seen in figure \ref{fig:mhplotsb}.
 	\end{subfigure}
 	\caption{}\label{fig:mhplotsb}
 \end{figure}
-In figure \ref{fig:mhlogb} it appears that altough closer than the rejection
+In figure \ref{fig:mhlogb} it appears that although closer than the rejection
 sampling case, there are still some issues at extreme $\theta$ values. It can be seen that
 the histogram slightly overshoots the analytical plot at the edges - as this is a log
 plot this suggests that the more extreme values are under-represented in our
 sample.
-PROPOSAL SIGMA/ACCEPTANCE RATE ???
-MC SIGMA INDEPENDENT OF PROPOSAL SIGMA
-
-\subsection{Analytical vs Rejection vs MH}
 
 \section{Bivariate Target Distribution} 
-\subsection{Analytical Solution}
 Consider the linear model
 \begin{equation}
 	y = F\theta + \epsilon
 \end{equation}
 where y is a vector containing our data, $\theta$ is a vector of unkown
 parameters, F is the design matrix and $\epsilon$ is a vector containing the
-noise. If we assume that the noise is randomly gaussian distributed with zero
+noise. Let's assume that the noise is randomly gaussian distributed with zero
 mean and zero correlation, then the likelihood function can be shown to take the form
 \begin{equation}
 	p(y|\theta) = \mathcal{L}_0 \exp\left[-\frac{1}{2}(\theta - \theta_0)^tL(\theta - \theta_0)\right],
@@ -311,12 +307,13 @@ where $L$ is the likelihood fisher matrix, $\mathcal{L}_1$ is a constant, and
 $\theta_0$ is dependent on $L$ and constants related to the linear model above
 (see \cref{sec:2dlikelihood}).
 
-If we then also say we have a Gaussian prior with zero mean and Fisher matrix $P$, i.e.
+Also say we have a Gaussian prior with zero mean and Fisher matrix $P$, i.e.
 \begin{equation}
-	p(\theta) = \frac{|P|^{\sfrac{1}{2}}}{(2\pi)^{\sfrac{n}{2}}} \exp \left[ \frac{1}{2} \theta^t P \theta \right],
+	p(\theta) = \frac{|P|^{\sfrac{1}{2}}}{(2\pi)^{\sfrac{n}{2}}} \exp \left[ \frac{1}{2} \theta^t P \theta \right].
 \end{equation}
 
-then using Bayes theorem the posterior can be shown to follow
+\subsection{Analytical Solution}
+Using Bayes theorem the posterior can be shown to follow
 \begin{equation}
 	p(\theta|y) \propto \exp \left[ -\frac{1}{2} (\theta - \bar{\theta})^t \mathcal{F} (\theta - \bar{\theta}) \right],
 \end{equation}
@@ -350,6 +347,21 @@ From this we find that the posterior mean,
 \end{figure}
 
 \subsection{Metropolis-Hastings Algorithm} 
+
+The Metropolis-Hastings algorithm was then applied to this bivariate posterior
+distribution. The program includes a preliminary run - this is done in order
+to find a rough outline of the posterior distribution. From this the
+orientation of the elliptical distribution can be approximated, which is used in order
+to transform the distribution to a unit circle. Samples are taken from this
+using Metropolis-Hastings, and then transformed back to the original
+distribution, as seen in figure \ref{fig:rot-unrot}. 
+This makes the choice of proposal distribution simpler and the
+algorithm more efficient - it is easiest to choose the proposal distribution
+such that the standard deviations are specified in the x and y directions.
+However if the ellipse of our desired distribution is not aligned with the axes
+then this will reduce the efficiency of the mixing. Transforming the ellipse
+not only aligns it to the axes (and thus to the proposal distribution) but also
+means we can use the same proposal standard devation in along each axis.
 \begin{figure}[!ht]
 	\centering
 	\begin{subfigure}[t]{0.4\linewidth}
@@ -371,21 +383,6 @@ From this we find that the posterior mean,
 	\end{subfigure}
 	\caption{}\label{fig:rot-unrot}
 \end{figure}
-
-The Metropolis-Hastings algorithm was then applied to this bivariate posterior
-distribution. The program includes a preliminary run - this is done in order
-to find a rough outline of the posterior distribution. From this the
-orientation of the elliptical distribution can be found, which is used in order
-to transform the distribution to a unit circle. Samples are taken from this
-using Metropolis-Hastings, and then transformed back to the original
-distribution, as seen in figure \ref{fig:rot-unrot}. 
-This makes the choice of proposal distribution simpler and the
-algorithm more efficient - it is easiest to choose the proposal distribution
-such that the standard deviation is specified in the x and y directions.
-However if the ellipse of our desired distribution is not aligned with the axes
-then this will reduce the efficiency of the mixing. Transforming the ellipse
-not only aligns it to the axes (and thus to the proposal distribution) but also
-means we can use the same proposal standard devation in along each axis.
 
 Another benefit of using a preliminary run is that the resulting mean can be used
 as the initial $\theta$ in the main run. This may reduce mixing time, and
@@ -415,17 +412,21 @@ regions containing 67\%, 95\% and 99\% of the samples.
 	distributions for each parameter.}
 	\label{fig:marginalized}
 \end{figure}
+The Monte Carlo estimate for the parameter was found to be $\theta_{MC} = \begin{bmatrix} 
+		-0.012 \\
+	1.329 \end{bmatrix}$, which matches the analytical result to 3 decimal places.
 
-Figure \ref{fig:marginalized} shows both the numerically approximated and
+Both the numerically approximated and
 analytically calculated confidence regions, as well as marginalized
-distributions for each parameter. The numerical approximation was made under
+distributions for each parameter are shown in figure \ref{fig:marginalized}. The numerical approximation was made under
 the assumption that the population always decreases radially out from the mean.
 As we have a finite sample size this in practice is not always the case, and so
 the confidence regions are not as clear as they would be if we had not used
 such an assumption. However they serve to visually give us a clearer idea of of
 how well our MCMC samples fit the target distribution. Checking the numerical
 approximation, the $1-$, $2-$ and $3-\sigma$ regions contain 67.9\%, 94.4\% and
-97.2\% of the samples respectively.
+97.2\% of the samples respectively - indicating that the aforementioned
+assumption about our distribution of samples is imperfect, but very close in the more populated areas.
 
 \begin{figure}[!ht]
 	\centering
@@ -436,19 +437,21 @@ approximation, the $1-$, $2-$ and $3-\sigma$ regions contain 67.9\%, 94.4\% and
 	\label{fig:model-mcmc}
 \end{figure}
 
-\subsection{Analytical vs MH}
-
 \section{Conclusion}
 We have seen that the Metropolis-Hastings algorithm produces better results in
 the one-dimensional case than rejection sampling. On applying this to a
-two-dimensional toy problem we found that it produced results which match the
+two-dimensional toy problem it was to produce results which match the
 analytical solution well, suggesting that it would be a good choice of MCMC
-method for future problems. However, we used a preliminary run to improve the
+method for future problems. The analytical solution to our problem was found to be $\theta = \begin{bmatrix} 
+		-0.012 \\ 
+	1.329 \end{bmatrix}$ and the Monte Carlo estimate $\theta_{MC} = \begin{bmatrix} 
+		-0.012 \\ 
+	1.329 \end{bmatrix}$. However, a preliminary run was used to improve the
 results of the main run, which takes extra time and may not always be
 convenient. In order to achieve accuracy to 3 decimal places 300,000 iterations
 of Metropolis-Hastings were used. Running this takes some time, and it would be
-worthwhile to focus some more on improving the efficiency of the program. For
-example implementing it in C instead of Python may improve it's speed.
+worthwhile to focus some more on improving the efficiency of the program (for
+example implementing it in C instead of Python may improve it's speed).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \appendix 
@@ -712,13 +715,6 @@ with mean $\bar{\theta}$ and Fisher matrix $\mathcal{F}$.
 		Gilks, W. R., Richardson, S., Spiegelhalter, D., J. (1996)
 		\textit{Markov Chain Monte Carlo in Practice}. London, Chapman
 		and Hall.
-	
-	\bibitem{acceptance}
-		Gelman, A., Roberts, G. O., Gilks, W. R., (1996) Efficient
-		Metropolis Jumping Rules. \textit{Bayesian Statistics 5}. [Online]
-		Oxford University Press. Available from:
-		http://www.stat.columbia.edu/~gelman/research/published/baystat5.pdf
-		[Accessed 24 November 2013]
 
 	\bibitem{handbook}
 		C. J. Geyer (2011) Introduction to Markov Chain Monte Carlo.
@@ -727,6 +723,14 @@ with mean $\bar{\theta}$ and Fisher matrix $\mathcal{F}$.
 		Hall/CRC Handbooks of Modern Statistical Methods. Florida,
 		Chapman and Hall/CRC, pp. 3-47.
 	
+	\bibitem{acceptance}
+		Gelman, A., Roberts, G. O., Gilks, W. R., (1996) Efficient
+		Metropolis Jumping Rules. \textit{Bayesian Statistics 5}. [Online]
+		Oxford University Press. Available from:
+		http://www.stat.columbia.edu/~gelman/research/published/baystat5.pdf
+		[Accessed 24 November 2013]
+
+
 
 \end{thebibliography}
 
