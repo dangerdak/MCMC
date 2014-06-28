@@ -116,27 +116,29 @@ def plot_rejection_sampling(thetas, posteriors, x_accepts, bins):
 	bin_width = bin_edges[1] - bin_edges[0]
 	hist = hist / max(hist)
 	ax.bar(bin_edges[:-1], hist, bin_width, color='green')
-	ax.tick_params(axis='both', which='major', labelsize=20)
+	ax.tick_params(axis='both', which='major', labelsize=30)
 
 	# Create strings to show numerical mean and standard deviation on graphs
 	mean = numpy.mean(x_accepts)
 	stdev = numpy.std(x_accepts)
 	display_string = ('$\mu_{{MC}} = {0:.3f} $\n$\sigma_{{MC}} = {1:.3f}$').format(mean, stdev)
 
-	plt.xlabel(r'$\theta$', fontsize=28)
-	plt.ylabel(r'$\propto P(\theta|x)$', fontsize=28)
-	plt.text(0.7, 0.8, display_string, transform=ax.transAxes, fontsize=20)
+	plt.xlabel(r'$\theta$', fontsize=30)
+	plt.ylabel(r'$\propto P(\theta|x)$', fontsize=30)
+	plt.text(0.6, 0.8, display_string, transform=ax.transAxes, fontsize=30)
+	plt.locator_params(axis='x', nbins=5)
 	plt.savefig('rejection.png', bbox_inches='tight')
 
 	# Plot log
 	fig, ax = plt.subplots()
 	plt.plot(thetas, -numpy.log(posteriors), linewidth=3)
 	ax.bar(bin_edges[:-1], -numpy.log(hist), bin_width, color='green')
-	ax.tick_params(axis='both', which='major', labelsize=20)
+	ax.tick_params(axis='both', which='major', labelsize=30)
 
-	plt.xlabel(r'$\theta$', fontsize=28)
-	plt.ylabel(r'$\propto log(P(\theta|x))$', fontsize=28)
-	plt.text(0.5, 0.5, display_string, transform=ax.transAxes, fontsize=20)
+	plt.xlabel(r'$\theta$', fontsize=30)
+	plt.ylabel(r'$\propto log(P(\theta|x))$', fontsize=30)
+	plt.locator_params(axis='x', nbins=5)
+	plt.text(0.3, 0.5, display_string, transform=ax.transAxes, fontsize=30)
 
 	plt.savefig('rejlog.png', bbox_inches='tight')
 
@@ -150,27 +152,29 @@ def plot_metropolis_hastings(thetas, posteriors, thetas_mh, bins):
 	bin_width = bin_edges[1] - bin_edges[0]
 	hist = hist / max(hist)
 	ax.bar(bin_edges[:-1], hist, bin_width, color='green')
-	ax.tick_params(axis='both', which='major', labelsize=20)
+	ax.tick_params(axis='both', which='major', labelsize=30)
 
 	# Create strings to show numerical mean and standard deviation on graphs
 	mean = numpy.mean(thetas_mh)
 	stdev = numpy.std(thetas_mh)
 	display_string = ('$\mu_{{MC}} = {0:.3f} $\n$\sigma_{{MC}} = {1:.3f}$').format(mean, stdev)
 
-	plt.xlabel(r'$\theta$', fontsize=28)
-	plt.ylabel(r'$\propto P(\theta|x)$', fontsize=28)
-	plt.text(0.7, 0.8, display_string, transform=ax.transAxes, fontsize=20)
+	plt.xlabel(r'$\theta$', fontsize=30)
+	plt.ylabel(r'$\propto P(\theta|x)$', fontsize=30)
+	plt.text(0.6, 0.8, display_string, transform=ax.transAxes, fontsize=30)
+	plt.locator_params(axis='x', nbins=5)
 	plt.savefig('metropolishastings.png', bbox_inches='tight')
 
 	# Plot log
 	fig, ax = plt.subplots()
 	plt.plot(thetas, -numpy.log(posteriors), linewidth=3)
 	ax.bar(bin_edges[:-1], -numpy.log(hist), bin_width, color='green')
-	ax.tick_params(axis='both', which='major', labelsize=20)
+	ax.tick_params(axis='both', which='major', labelsize=30)
 
-	plt.xlabel(r'$\theta$', fontsize=28)
-	plt.ylabel(r'$\propto log(P(\theta|x))$', fontsize=28)
-	plt.text(0.5, 0.5, display_string, transform=ax.transAxes, fontsize=20)
+	plt.xlabel(r'$\theta$', fontsize=30)
+	plt.ylabel(r'$\propto log(P(\theta|x))$', fontsize=30)
+	plt.text(0.4, 0.5, display_string, transform=ax.transAxes, fontsize=30)
+	plt.locator_params(axis='x', nbins=5)
 
 	plt.savefig('mhlog.png', bbox_inches='tight')
 	
@@ -184,16 +188,17 @@ def plot_metropolis_hastings(thetas, posteriors, thetas_mh, bins):
 
 	# Metropolis-Hastings 
 	ax.bar(bin_edges[:-1], hist, bin_width, color='green')
-	ax.tick_params(axis='both', which='major', labelsize=20)
+	ax.tick_params(axis='both', which='major', labelsize=30)
 
 	# Create strings to show numerical mean and standard deviation on graphs
 	mean = numpy.mean(thetas_mh[200:])
 	stdev = numpy.std(thetas_mh[200:])
 	display_string = ('$\mu_{{MC}} = {0:.3f} $\n$\sigma_{{MC}} = {1:.3f}$').format(mean, stdev)
 
-	plt.xlabel(r'$\theta$', fontsize=28)
-	plt.ylabel(r'$\propto P(\theta|x)$', fontsize=28)
-	plt.text(0.7, 0.8, display_string, transform=ax.transAxes, fontsize=20)
+	plt.xlabel(r'$\theta$', fontsize=30)
+	plt.ylabel(r'$\propto P(\theta|x)$', fontsize=30)
+	plt.text(0.6, 0.8, display_string, transform=ax.transAxes, fontsize=30)
+	plt.locator_params(axis='x', nbins=5)
 	plt.savefig('metropolishastings-burnin.png', bbox_inches='tight')
 
 	# Plot log
@@ -201,11 +206,12 @@ def plot_metropolis_hastings(thetas, posteriors, thetas_mh, bins):
 	plt.plot(thetas, -numpy.log(posteriors), linewidth=3)
 
 	ax.bar(bin_edges[:-1], -numpy.log(hist), bin_width, color='green')
-	ax.tick_params(axis='both', which='major', labelsize=20)
+	ax.tick_params(axis='both', which='major', labelsize=30)
 
-	plt.xlabel(r'$\theta$', fontsize=28)
-	plt.ylabel(r'$\propto log(P(\theta|x))$', fontsize=28)
-	plt.text(0.5, 0.5, display_string, transform=ax.transAxes, fontsize=20)
+	plt.xlabel(r'$\theta$', fontsize=30)
+	plt.ylabel(r'$\propto log(P(\theta|x))$', fontsize=30)
+	plt.text(0.3, 0.5, display_string, transform=ax.transAxes, fontsize=30)
+	plt.locator_params(axis='x', nbins=5)
 
 	plt.savefig('mhlog-burnin.png', bbox_inches='tight')
 
